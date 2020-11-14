@@ -1,0 +1,13 @@
+out/
+build/
+.vs/
+*.lib
+*.o
+*.a
+*.so
+*.exe
+*.obj
+*.log
+*.pdb
+*.idb
+*.bin
