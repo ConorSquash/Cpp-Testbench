@@ -29,8 +29,8 @@ void generate_testpoints(int x_points, int y_points, int z_points, double x_spac
 	double current_x = -((x_spacing / 2) + x_spacing * ((x_points / 2) - 1));
 	double current_y = -((y_spacing / 2) + y_spacing * ((y_points / 2) - 1));
 
-	// Initial z point is slighly above the Field Generator by the spacing amount
-	double current_z = z_spacing;
+	// Initial z point is slighly above the Field Generator
+	double current_z = 0.1;
 
 	
 

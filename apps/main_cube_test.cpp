@@ -322,7 +322,9 @@ int main() {
 	// Determine the error between the solved solution and the testpoint
 
 	double x_error, y_error, z_error, theta_error, phi_error;
-	double total_error_squared = 0;
+	double total_pos_error_squared = 0;
+	double total_theta_error_squared = 0;
+	double total_phi_error_squared = 0;
 
 
 	// Loop through all previously generated points
@@ -418,7 +420,9 @@ int main() {
 				cout << "Error in theta = " << theta_error << endl;
 				cout << "Error in phi = " << phi_error << endl;
 
-				total_error_squared = (pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + pow(theta_error, 2) + pow(phi_error, 2)) + total_error_squared;
+				total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
+				total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
+				total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
 
 				//cout << "error squared : " << total_error_squared << endl;
 
@@ -434,10 +438,16 @@ int main() {
 
 
 	cout << "Total number of points solved for : " << iterations << endl;
-	cout << "Time taken by solver for this : " << total_time << " milliseconds \n" << endl;
+	cout << "Time taken by solver for this : " << total_time << " milliseconds \n\n" << endl;
 
-	double RMS_error = sqrt( total_error_squared / iterations);
-	cout << "Total RMS error : " << RMS_error << endl;
+	double position_RMS_error = sqrt( total_pos_error_squared / iterations);
+	cout << "Total Position RMS error : " << position_RMS_error << endl;
+
+	double theta_RMS_error = sqrt(total_theta_error_squared / iterations);
+	cout << "Total Theta RMS error : " << theta_RMS_error << endl;
+
+	double phi_RMS_error = sqrt(total_phi_error_squared / iterations);
+	cout << "Total Phi RMS error : " << phi_RMS_error << endl;
 
 
 
