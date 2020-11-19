@@ -12,3 +12,6 @@ target_link_libraries(sensor_objective PRIVATE eigen)
 
 add_library(field_calc STATIC field_coil_calc.cpp field_coil_calc.h)
 target_link_libraries(field_calc PRIVATE eigen)
+
+add_library(cube_points STATIC generate_testpoints.cpp generate_testpoints.h)
+target_link_libraries(cube_points PRIVATE eigen)
