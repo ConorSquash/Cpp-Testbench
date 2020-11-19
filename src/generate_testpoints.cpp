@@ -18,7 +18,7 @@ using namespace Eigen;
 
 using namespace std;
 
-void generate_testpoints(int x_points, int y_points, int z_points, double x_spacing, double y_spacing, double z_spacing, MatrixXd& xyz_points)
+void generate_testpoints(int x_points, int y_points, int z_points, double x_spacing, double y_spacing, double z_spacing, VectorXd& x_values, VectorXd& y_values, VectorXd& z_values)
 {
 	 //  generate_testpoints() takes 7 inputs : 
 	 //  The no. of xyz points, the xyz spacing in metres and a matrix to return the points
@@ -32,13 +32,13 @@ void generate_testpoints(int x_points, int y_points, int z_points, double x_spac
 	// Initial z point is slighly above the Field Generator by the spacing amount
 	double current_z = z_spacing;
 
-
+	
 
 	// Generate x points
 
-	for (int i = 0; i < xyz_points.row(0).size(); i++)
+	for (int i = 0; i < x_points; i++)
 	{
-		xyz_points(0, i) = current_x;
+		x_values(i) = current_x;
 
 		current_x = current_x + x_spacing;
 	}
@@ -46,10 +46,10 @@ void generate_testpoints(int x_points, int y_points, int z_points, double x_spac
 
 	// Generate y points
 
-	for (int i = 0; i < xyz_points.row(1).size(); i++)
+	for (int i = 0; i < y_points; i++)
 	{
 
-		xyz_points(1, i) = current_y;
+		y_values(i) = current_y;
 
 		current_y = current_y + y_spacing;
 	}
@@ -57,10 +57,10 @@ void generate_testpoints(int x_points, int y_points, int z_points, double x_spac
 
 	// Generate z points
 
-	for (int i = 0; i < xyz_points.row(2).size(); i++)
+	for (int i = 0; i < z_points; i++)
 	{
 
-		xyz_points(2, i) = current_z;
+		z_values(i) = current_z;
 
 		current_z = current_z + z_spacing;
 	}

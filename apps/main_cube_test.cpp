@@ -34,6 +34,8 @@ objective/cost function.
 #include <string>
 #include <vector>
 #include <chrono>
+#include <iterator>
+#include <random>
 
 #define _USE_MATH_DEFINES
 #include "math.h"
@@ -260,128 +262,182 @@ int main() {
 
 
 
-	// ================ CREATE SIMULATED SENSOR MEASUREMENT ================== \\
-
-	// Calculate flux through the sensor at position[x, y, z] with angles[theta, phi]
-	double x_test = 0.1;
-	double y_test = 0.1;
-	double z_test = 0.1;
-	double theta_test = M_PI / 3;
-	double phi_test = M_PI_2;
-
-
-	// Simulate magnetic field from each coil at a point in space.
-	// Returns M x 1 vector of flux components, where M is the number of magnetic transmitter coils.
-
-	VectorXd Hx(8), Hy(8), Hz(8);   // Create the vectors that will be returned from field_coil_calc 
-
-
-	field_coil_calc(1, X_Matrix, Y_Matrix, Z_Matrix, x_test, y_test, z_test, Hx, Hy, Hz);
-
-
-	sensor_flux = (Hx.array() * sin(theta_test) * cos(phi_test)) + (Hy.array() * sin(theta_test) * sin(phi_test)) + (Hz.array() * cos(theta_test));
-
-
+	// ====================  Generating White Gaussian Noise ================== \\
 
 	// Simulate imperfect sensor measurements
-	 // *****************************
+
+    // Define random generator with Gaussian distribution
+	const double mean = 0.0;
+	const double stddev = 0.05;
+
+	default_random_engine generator;
+	normal_distribution<double> dist(mean, stddev);
+
+
+
+
 
 	// ====================  Generating Cube of Testpoints ================== \\
 
-		// Here the user specifies the number and spacing between points
-	    // to generate a cube of testpoints.
+	// Here the user specifies the number and spacing between points
+	// to generate a cube of testpoints.
 
-	int num_x_points = 8;
-	int num_y_points = 6;
-	int num_z_points = 4;
+	int num_x_points = 4;
+	int num_y_points = 4;
+	int num_z_points = 1;
 
 	double x_spacing = 0.01;
 	double y_spacing = 0.02;
 	double z_spacing = 0.05;
 
 
-	// The matrix testpoints_cube has 3 rows (one for each dimension)
-	// The number of columns must be whatever number of points is largest above.
-	MatrixXd testpoints_cube(3, num_x_points);
+	// Make the 3 vectors that will store the testpoints
+
+	VectorXd x_testpoints(num_x_points);
+	VectorXd y_testpoints(num_y_points);
+	VectorXd z_testpoints(num_z_points);
 
 	// Generate the points
-	generate_testpoints(num_x_points, num_y_points, num_z_points, x_spacing, y_spacing, z_spacing, testpoints_cube);
+	generate_testpoints(num_x_points, num_y_points, num_z_points, x_spacing, y_spacing, z_spacing, x_testpoints, y_testpoints, z_testpoints);
 
 	// Check the points
-	cout << "Cube of testpoints : " << endl;
-	cout << testpoints_cube << endl;
+	/*cout << "Cube of testpoints : " << endl;
+	cout << " x : " << x_testpoints << endl;
+	cout << " y : " << y_testpoints << endl;
+	cout << " z : " << z_testpoints << endl;*/
+
+	// Provide an initial guess for x,y,z,theta,phi
+	// Declaring it here so it is not declared every time there is a new testpoint
+
+	VectorXd initialGuess(5);
+	initialGuess << 0, 0, 0.2, 1, 1.5;
 
 
-	// ==================== CALL OBJECTIVE FUNCTION ================== \\
+	// ================ CREATE SIMULATED SENSOR MEASUREMENT(S) ================== \\
 
-		// Call solver to solve for position vector variable xval()
-		// Magnetic coil filaments constants passed to the objective function
-		// The simulated sensor calibration contant is passed to the objective function
-		// Objective function is called in Struct 'MySolver' at the top of the program
+	int iterations = 0;       // Keep track of how many points are solved for
 
+	double total_time = 0;   	// Keep track of total time taken to solve 
 
-	// Looping the solver multiple times and timing it 
+	// Determine the error between the solved solution and the testpoint
 
-	VectorXd initialGuess(5); 						// Provide an initial guess for x,y,z,theta,phi
-	initialGuess << 0.125, 0.13, 0.2, 1, 0;
-
-	auto start = high_resolution_clock::now();		// Get starting timepoint
+	double x_error, y_error, z_error, theta_error, phi_error;
+	double total_error_squared = 0;
 
 
-	int iterations = 0;
+	// Loop through all previously generated points
 
-	//for (int i = 0; i < 10; i++)
-	//{
+	for (int k = 0; k < num_z_points; k++)
+		for (int j = 0; j < num_y_points; j++)
+			for (int i = 0; i < num_x_points; i++)
+			{
 
-	//	// Start the optimization.
-	//	auto result = optimizer.minimize(initialGuess);
-
-	//	cout << "Done! Converged: " << (result.converged ? "true" : "false")
-	//		<< " Iterations: " << result.iterations << std::endl;
-
-	//	// do something with final function value
-	//	//cout << "Final fval: " << result.fval.transpose() << std::endl;
-
-	//	// do something with final x-value
-	//	//cout << "Final xval: " << result.xval.transpose() << std::endl;
+				// Calculate flux through the sensor at position[x, y, z] with angles[theta, phi]
+				double x_test = x_testpoints(i);
+				double y_test = y_testpoints(j);
+				double z_test = z_testpoints(k);
+				double theta_test = M_PI / 3;
+				double phi_test = M_PI_2;
 
 
-	//	//cout << "\n" << endl;
+				// Simulate magnetic field from each coil at a point in space.
+				// Returns M x 1 vector of flux components, where M is the number of magnetic transmitter coils.
 
-	//	//cout << "This is the test point : " << endl;
-	//	//cout << " x = " << x_test << endl;
-	//	//cout << " y = " << y_test << endl;
-	//	//cout << " z = " << z_test << endl;
-	//	//cout << " theta = " << theta_test << endl;
-	//	//cout << " phi = " << phi_test << endl;
-
-	//	//cout << "\n\n" << endl;
-
-	//	//cout << "This is the solved point : " << endl;
-	//	//cout << " x = " << result.xval(0) << endl;
-	//	//cout << " y = " << result.xval(1) << endl;
-	//	//cout << " z = " << result.xval(2) << endl;
-	//	//cout << " theta = " << result.xval(3) << endl;
-	//	//cout << " phi = " << result.xval(4) << endl;
-
-	//	//cout << "\n\n\n" << endl;
-
-	//	iterations++;
+				VectorXd Hx(8), Hy(8), Hz(8);   // Create the vectors that will be returned from field_coil_calc 
 
 
-	//}
-
-	auto stop = high_resolution_clock::now();        // Get stopping timepoint
-
-	auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
+				field_coil_calc(1, X_Matrix, Y_Matrix, Z_Matrix, x_test, y_test, z_test, Hx, Hy, Hz);
 
 
-	cout << "Number of times solved : " << iterations << endl;
-	cout << "Time taken by solver for this : " << duration.count() << " milliseconds" << endl;
+				sensor_flux = (Hx.array() * sin(theta_test) * cos(phi_test)) + (Hy.array() * sin(theta_test) * sin(phi_test)) + (Hz.array() * cos(theta_test));
+
+
+				//cout << "Sensor flux before noise : " << endl;
+				//cout << sensor_flux << endl;
+
+				// Add Gaussian noise
+				sensor_flux = sensor_flux.array() + dist(generator);
+
+				//cout << "Sensor flux after noise : " << endl;
+				//cout << sensor_flux << endl;
+
+					
+
+				// ==================== CALL OBJECTIVE FUNCTION ================== \\
+
+					// Call solver to solve for position vector variable xval()
+					// Magnetic coil filaments constants passed to the objective function
+					// The simulated sensor calibration contant is passed to the objective function
+					// Objective function is called in Struct 'MySolver' at the top of the program
 
 
 
 
+				auto start = high_resolution_clock::now();		// Get starting timepoint
+
+				auto result = optimizer.minimize(initialGuess);
+
+				cout << "Done! Converged: " << (result.converged ? "true" : "false")
+					<< " Iterations: " << result.iterations << std::endl;
+
+				auto stop = high_resolution_clock::now();        // Get stopping timepoint
+
+				auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
+		
+				cout << "Time taken by solver for this : " << duration.count() << " milliseconds \n" << endl;
+
+
+				cout << "This is the test point : " << endl;
+				cout << " x = " << x_test << endl;
+				cout << " y = " << y_test << endl;
+				cout << " z = " << z_test << endl;
+				cout << " theta = " << theta_test << endl;
+				cout << " phi = " << phi_test << endl;
+
+				cout << "\n" << endl;
+
+				cout << "This is the solved point : " << endl;
+				cout << " x = " << result.xval(0) << endl;
+				cout << " y = " << result.xval(1) << endl;
+				cout << " z = " << result.xval(2) << endl;
+				cout << " theta = " << result.xval(3) << endl;
+				cout << " phi = " << result.xval(4) << endl;
+
+				cout << "\n" << endl;
+
+				x_error = x_test - result.xval(0);
+				y_error = y_test - result.xval(1);
+				z_error = z_test - result.xval(2);
+				theta_error = theta_test - abs(result.xval(3));
+				phi_error = phi_test - abs(result.xval(4));
+
+				cout << "This is the error : " << endl;
+				cout << "Error in x = " << x_error << endl;
+				cout << "Error in y = " << y_error << endl;
+				cout << "Error in z = " << z_error << endl;
+				cout << "Error in theta = " << theta_error << endl;
+				cout << "Error in phi = " << phi_error << endl;
+
+				total_error_squared = (pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + pow(theta_error, 2) + pow(phi_error, 2)) + total_error_squared;
+
+				//cout << "error squared : " << total_error_squared << endl;
+
+				cout << "\n\n\n" << endl;
+
+				iterations++;
+
+				total_time = total_time + duration.count();
+		
+			}
+
+	
+
+
+	cout << "Total number of points solved for : " << iterations << endl;
+	cout << "Time taken by solver for this : " << total_time << " milliseconds \n" << endl;
+
+	double RMS_error = sqrt( total_error_squared / iterations);
+	cout << "Total RMS error : " << RMS_error << endl;
 
 
 

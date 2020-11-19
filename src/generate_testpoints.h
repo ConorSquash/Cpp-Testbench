@@ -11,7 +11,7 @@ using namespace Eigen;
 
 using Eigen::MatrixXd;
 
-void generate_testpoints(int x_points, int y_points, int z_points, double x_spacing, double y_spacing, double z_spacing, MatrixXd& xyz_points);
+void generate_testpoints(int x_points, int y_points, int z_points, double x_spacing, double y_spacing, double z_spacing, VectorXd& x_values, VectorXd& y_values, VectorXd& z_values);
 
 
 #endif
