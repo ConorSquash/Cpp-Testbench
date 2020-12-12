@@ -6,6 +6,7 @@ project(Anser)
 add_subdirectory(extern/catch)
 add_subdirectory(extern/eigen)
 add_subdirectory(extern/least-squares)
+add_subdirectory(extern/nidaq)
 
 # Sources for generated libraries
 add_subdirectory(src)

@@ -282,8 +282,8 @@ int main() {
 	// Here the user specifies the number and spacing between points
 	// to generate a cube of testpoints.
 
-	int num_x_points = 4;
-	int num_y_points = 4;
+	int num_x_points = 5;
+	int num_y_points = 2;
 	int num_z_points = 1;
 
 	double x_spacing = 0.01;
@@ -358,7 +358,7 @@ int main() {
 				//cout << sensor_flux << endl;
 
 				// Add Gaussian noise
-				sensor_flux = sensor_flux.array() + dist(generator);
+		//sensor_flux = sensor_flux.array() + dist(generator);
 
 				//cout << "Sensor flux after noise : " << endl;
 				//cout << sensor_flux << endl;
