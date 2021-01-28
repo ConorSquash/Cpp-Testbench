@@ -9,3 +9,6 @@ target_link_libraries(solver_cube_testbench PRIVATE cube_points eigen coil_dim c
 
 add_executable(cpp_ni_daq_test ni_daq_test.cpp)
 target_link_libraries(cpp_ni_daq_test PRIVATE eigen daq)
+
+add_executable(cpp_dft_testbench dft_testbench.cpp)
+target_link_libraries(cpp_dft_testbench PRIVATE eigen)
