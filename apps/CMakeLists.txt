@@ -12,3 +12,6 @@ target_link_libraries(cpp_ni_daq_test PRIVATE eigen daq)
 
 add_executable(cpp_dft_testbench dft_testbench.cpp)
 target_link_libraries(cpp_dft_testbench PRIVATE eigen)
+
+add_executable(cpp_daq_and_dft daq_and_demod.cpp)
+target_link_libraries(cpp_daq_and_dft PRIVATE eigen daq)
