@@ -3,6 +3,11 @@
 #include <string>
 #include <vector>
 #include <complex>
+#include <iterator>
+#include <fstream>
+#include <sstream>
+
+
 
 #define _USE_MATH_DEFINES
 #include "math.h"
@@ -26,13 +31,17 @@ using namespace std;
 using namespace literals;
 
 
+
 int main() {
 
 	// Specify the sampling frequency per sensor channel
 
 	double Fs = 100e3;
 	double Ts = 1 / Fs;
-	int numSamples = 5000;
+	int numSamples = 1000;
+
+
+
 
 
 	// Specify the number of time samples, must be the same as the length of X
@@ -58,39 +67,45 @@ int main() {
 	x_test = x1_test + x2_test;
 
 
-	// Define the transmission frequencies of the emitter coil
-	// These will be used for demodulation
 
-	VectorXd F(8);
+		// Define the transmission frequencies of the emitter coil
+		// These will be used for demodulation
 
-	F << 20000, 22000, 24000, 15000, 28000, 30000, 15000, 34000;
+		VectorXd F(8);
 
-
-	// Define the demodulation matrix for the asynchronous demodulation scheme
-
-	MatrixXcd E(8, numSamples);   // Matrix of complex doubles
+		F << 20000, 5000, 24000, 15000, 28000, 30000, 15000, 34000;
 
 
-	for (int j = 0; j < 8; j++)
-		E.row(j) = exp(2 * M_PI * F(j) * 1i * t.array());
+		// Define the demodulation matrix for the asynchronous demodulation scheme
+
+		MatrixXcd E(8, numSamples);   // Matrix of complex doubles
 
 
-	E.transposeInPlace();		// Must transpose in place when replacing with a transpose of itself!!! 
-								// Same as E = E.transpose().eval();
+		for (int j = 0; j < 8; j++)
+			E.row(j) = exp(2 * M_PI * F(j) * 1i * t.array());
+
+
+		E.transposeInPlace();		// Must transpose in place when replacing with a transpose of itself!!! 
+									// Same as E = E.transpose().eval();
 
 
 
-	VectorXcd result(8), magnitude(8);
+		VectorXcd result(8), magnitude(8);
 
-	result = x_test.transpose() * E;
+		result = x_test.transpose() * E;
+		//result = square_test.transpose() * E;
 
-	magnitude = (2 * result.array().abs()) / numSamples;
 
-	cout << "Magnitude of each frequency component : " << endl;
-	//cout << "Mag is " << magnitude.rows() << " by " << magnitude.cols() << endl;
-	cout << magnitude;
+		magnitude = (2 * result.array().abs()) / numSamples;
 
-	getchar();
+		cout << "Magnitude of each frequency component : " << endl;
+		//cout << "Mag is " << magnitude.rows() << " by " << magnitude.cols() << endl;
+		cout << magnitude;
 
-	return 0;
+		getchar();
+
+		return 0;
 }
+
+
+

@@ -9,6 +9,10 @@
 #include "math.h"
 #include <cmath>
 
+#include <fstream>
+//#include <ifstream>
+//#include <ofstream>
+
 
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
@@ -29,7 +33,7 @@ using namespace literals;
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
 //float64     data[1000];
-float64     buff_data[1000];
+float64     buff_data[5000];
 MatrixXf    buffer_result;
 MatrixXd   buffer_result_d;
 
@@ -39,6 +43,8 @@ int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callba
 int read_data_buffer(int num_of_channels_used, int samps_per_chan);
 char* construct_channel_name(string channel_num);
 int demodulate();
+int write_txt();
+
 
 double      min_voltage;
 double      max_voltage;
@@ -56,9 +62,9 @@ char* channel_as_char_arr;
 VectorXcd result(8), magnitude(8);
 
 // Specify the sampling frequency per sensor channel
-double Fs = 10e3;
+double Fs = 100e3;
 double Ts = 1 / Fs;
-int numSamples = 1000;
+int numSamples = 5000;
 
 MatrixXcd E(8, numSamples);   // Matrix of complex doubles
 
@@ -82,6 +88,7 @@ int main() {
 	channel_char_arr = &str_obj[0];
 
 
+	
 
 
 
@@ -90,16 +97,16 @@ int main() {
 	min_voltage = 0;           // Voltage swing should be between -10 V -> +10 V
 	max_voltage = 5;
 
-	sample_rate = 10000;       // Set the sample rate of the DAQ for all channels in Hz
+	sample_rate = Fs;          // Set the sample rate of the DAQ for all channels in Hz
 							   // Regardless if they are read or not this is how often the DAQ looks at the channel inputs.
 
-	n_samples = 500;           // After this many samples are gathered PER CHANNEL the EveryNSamplesEvent will be called.
-							   // This event calls the function EveryNCallback (which calls the DAQmxReadAnalogF64 function)
+	n_samples = numSamples;     // After this many samples are gathered PER CHANNEL the EveryNSamplesEvent will be called.
+							    // This event calls the function EveryNCallback (which calls the DAQmxReadAnalogF64 function)
 
-	samples_per_chan = 500;    // Specify the number of samples read by each channel (usually ignored)
-							   // This is used to calculate the buffer size if the default isnt appropriate
+	samples_per_chan = numSamples;    // Specify the number of samples read by each channel (usually ignored)
+							          // This is used to calculate the buffer size if the default isnt appropriate
 
-	num_channels = 2;          // Set the number of channels used to determine buffer size. 
+	num_channels = 1;          // Set the number of channels used to determine buffer size. 
 
 	array_size = n_samples * num_channels;   // The array to read samples into, organized according to fillMode.
 
@@ -129,7 +136,7 @@ int main() {
 
 	VectorXd F(8);
 
-	F << 2500, 5000, 8500, 11020, 12500, 17888, 20000, 30000;
+	F << 2500, 4860, 8500, 11020, 12500, 17888, 20000, 30000;
 
 	// Define the demodulation matrix for the asynchronous demodulation scheme
 
@@ -173,8 +180,18 @@ int main() {
 
 	getchar();   // Wait for a key press to stop the code
 
+
+
+	
 	// Call the demodulation function here
 	demodulate();
+
+
+
+
+
+
+	//write_txt();
 
 
 Error:
@@ -239,6 +256,8 @@ int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callba
 	// Check to see if an error stopped the task.
 	DAQmxErrChk(status);
 
+	
+
 Error:
 	if (DAQmxFailed(error)) {
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
@@ -257,7 +276,7 @@ int read_data_buffer(int num_of_channels_used, int samps_per_chan) {
 			buffer_result(i, j) = buff_data[i + (j * samps_per_chan)];
 
 
-	cout << "First result in column 1 = " << buffer_result(0, 0) << endl;
+	//cout << "First result in column 1 = " << buffer_result(0, 0) << endl;
 		//"\t" <<    // Print the fifth result
 		//"First result in column 2 = " << buffer_result(0, 1) << endl;    // Print the fifth result
 
@@ -303,12 +322,39 @@ int demodulate() {
 
 	result = buffer_result_d.col(0).transpose() * E;     // The first column is the sampled data of the first channel
 
-	//cout << "Printing result " << endl << result << endl;
+	//cout << "\n\n\n Printing result " << endl << result << endl;
 
 	magnitude = (2 * result.array().abs()) / numSamples;
 
-	cout << "Magnitude of each frequency component : " << endl;
+
+	cout << "\n\n\n\n Magnitude of each frequency component : " << endl;
 	cout << magnitude << endl;
+
+	
+
+	return 0;
+}
+
+
+
+int write_txt() 
+{
+
+	ofstream myfile;
+	myfile.open ("sampled_data1.txt");
+
+	if (myfile.is_open())
+	{
+		myfile << buffer_result_d.col(0);
+		
+
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+
+
+	myfile.close();
+
 
 	return 0;
 }
