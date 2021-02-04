@@ -15,3 +15,6 @@ target_link_libraries(field_calc PRIVATE eigen)
 
 add_library(cube_points STATIC generate_testpoints.cpp generate_testpoints.h)
 target_link_libraries(cube_points PRIVATE eigen)
+
+add_library(solver_class STATIC solver_class.cpp solver_class.h)
+target_link_libraries(solver_class PRIVATE eigen coil_dim coil_spec sensor_objective field_calc lsq daq)

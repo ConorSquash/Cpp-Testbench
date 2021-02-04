@@ -15,3 +15,6 @@ target_link_libraries(cpp_dft_testbench PRIVATE eigen)
 
 add_executable(cpp_daq_and_dft daq_and_demod.cpp)
 target_link_libraries(cpp_daq_and_dft PRIVATE eigen daq)
+
+add_executable(solver_class_test "solver_class_testbench.cpp")
+target_link_libraries(solver_class_test PRIVATE solver_class eigen coil_dim coil_spec sensor_objective field_calc lsq)
