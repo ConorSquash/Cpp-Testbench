@@ -18,9 +18,13 @@ private:
 
 public:
 	void printmessage();
-	VectorXcd AcquirePeaks(int numSamples, double Ts);
-	//int ConfigureDAQ(double DAQfrequency, int no_of_samples, int no_of_chans);
+
 	int AcquireSamples(double Fs, double samples);
+
+	VectorXd AcquirePeaks(int numSamples, double Ts);
+
+	VectorXd Solve(VectorXd amplitudes, VectorXd initialGuess);
+
 };
 
 #endif

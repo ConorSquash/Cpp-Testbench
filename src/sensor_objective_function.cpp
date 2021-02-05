@@ -35,6 +35,8 @@ void sensor_objective_function(VectorXd& currentPandO, VectorXd& fluxReal, Matri
     double theta = currentPandO(3);
     double phi = currentPandO(4);
 
+    //cout << "Solving for a sensor flux of : \n" << fluxReal << endl << endl;
+
     VectorXd Hx(8), Hy(8), Hz(8);   // Create the vectors that will be returned from field_coil_calc                                           
 
     field_coil_calc(1, xcoil, ycoil, zcoil, x, y, z, Hx, Hy, Hz);
