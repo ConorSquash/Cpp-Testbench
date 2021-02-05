@@ -27,26 +27,22 @@ using namespace std::chrono;
 
 int main() {
 
-	Solver my_solver;
+	Solver my_sensor;
 
 	double Fs = 100e3;
 	double Ts = 1 / Fs;
-	int numSamps = 5000;
+	int numSamps = 1000;
 	int chans = 1;
 
-	// Congigure the DAQs sampling frequency, sample size and channels
-	my_solver.ConfigureDAQ(Fs, numSamps, chans);
 
-	//cout << "\n Press a key to extract peak values." << endl;
-	//getchar();
+	my_sensor.AcquireSamples(Fs,numSamps);
 
 	VectorXcd peaks(8);
 
-	// Extract the buffer from the DAQ into Eigen Matrix, demodulate
-	// and return a vector of the peak amplitudes
-	peaks = my_solver.AcquirePeaks(numSamps,Ts,chans);
+	// Return a vector of the peak amplitudes
+	peaks = my_sensor.AcquirePeaks(numSamps,Ts);
 
-	cout << "\n\n Magnitude of each frequency component : " << endl;
+	cout << "\n Magnitude of each frequency component : " << endl;
 	cout << peaks << endl;
 
 

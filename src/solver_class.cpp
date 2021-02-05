@@ -38,14 +38,8 @@ using namespace literals;
 using namespace std;
 using namespace std::chrono;
 
-VectorXd sensor_flux(8);
-vector<vector<double>> x_matrix(8);
-vector<vector<double>> y_matrix(8);
-vector<vector<double>> z_matrix(8);
 
-MatrixXd X_Matrix(8, 102);
-MatrixXd Y_Matrix(8, 102);
-MatrixXd Z_Matrix(8, 102);
+
 
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
@@ -58,37 +52,27 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
 int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
 
 int read_data_buffer(int num_of_channels_used, int samps_per_chan);
-char* construct_channel_name(string channel_num);
+
 int demodulate();
-int write_txt();
 
 
-double      min_voltage;
-double      max_voltage;
-int         sample_rate;
-int		    n_samples;
-int         samples_per_chan;
-int         num_channels;
-int         array_size;
-string      channel;
-char* channel_as_char_arr;
+
+
 
 
 // Demodulation Variables
 
 VectorXcd result(8), magnitude(8);
 
-// Specify the sampling frequency per sensor channel
-//double Fs = 100e3;
-//double Ts = 1 / Fs;
-//int numSamples = 5000;
 
-//MatrixXcd E(8, numSamples);   // Matrix of complex doubles
 
 
 
 
 void Solver::printmessage() { cout << "hello!" << endl; };
+
+/*
+
 
 int Solver::ConfigureDAQ(double DAQfrequency, int no_of_samples, int no_of_chans ) {
 
@@ -155,7 +139,7 @@ int Solver::ConfigureDAQ(double DAQfrequency, int no_of_samples, int no_of_chans
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
 
-	cout << "DAQ is configured and continuosly sampling!" << endl;
+	cout << "DAQ is configured and continuously sampling!" << endl;
 
 
 Error:
@@ -164,14 +148,17 @@ Error:
 	if (taskHandle != 0) {
 
 		//******** DAQmx Stop Code ********\\
-		
+
+		cout << "DAQ error" << endl;
 		DAQmxStopTask(taskHandle);
 		DAQmxClearTask(taskHandle);
 	}
 	if (DAQmxFailed(error))
 		printf("DAQmx Error: %s\n", errBuff);
+
 	printf("End of program, press Enter key to quit\n");
 	getchar();
+
 	return 0;
 };
 
@@ -193,9 +180,9 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
 
 
 	// Call the function that transfers the buffer data into an eigen matrix with each column representing a channel
-	//read_data_buffer(num_channels, samples_per_chan);
+	read_data_buffer(num_channels, samples_per_chan);
 
-	cout << "Entered EveryNCallback" << endl;
+	//cout << "Entered EveryNCallback" << endl;
 
 	// Call the demodulation function here
 	//demodulate();
@@ -233,19 +220,75 @@ Error:
 	return 0;
 }
 
-VectorXcd Solver::AcquirePeaks(int numSamples, double Ts, int no_of_chans ) {
+*/
+
+int Solver::AcquireSamples(double Fs, double samples) 
+{
+
+	// This function acquires a finite number of samples
+	// and sorts them into an eigen matrix
+	cout << "\n -> ACQUIRING " <<  samples << " SAMPLES" << endl;
+
+	buffer_result.resize(samples, 1);
+
+	int32       error = 0;
+	TaskHandle  taskHandle = 0;
+	int32       read;
+	float64     data[1000];
+	char        errBuff[2048] = { '\0' };
+
+	// DAQmx analog voltage channel and timing parameters
+
+	DAQmxErrChk(DAQmxCreateTask("", &taskHandle));
+
+	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, "Dev1/ai1", "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
+
+	DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
+
+	// DAQmx Start Code
+	DAQmxErrChk(DAQmxStartTask(taskHandle));
+
+	// DAQmx Read Code
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
+
+	// Extract buffer into Eigen Matrix
+	read_data_buffer(1,samples);
+
+
+
+	// Stop and clear task
+
+
+
+Error:
+
+	if (DAQmxFailed(error))
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+
+	if (taskHandle != 0) {
+
+		DAQmxStopTask(taskHandle);
+
+		DAQmxClearTask(taskHandle);
+
+	}
+
+	if (DAQmxFailed(error))
+		printf("DAQmx Error: %s\n", errBuff);
+
+	return 0;
+
+}
+
+
+
+
+VectorXcd Solver::AcquirePeaks(int numSamples, double Ts) {
 
 	// A function that when called returns a vector of demodulated data 
-	cout << "\n -> ACQUIRING BUFFER AND DEMODULATING" << endl;
+	cout << "\n -> DEMODULATING AND EXTRACTING PEAKS" << endl;
 
 
-	// Sorts the buffer into columns in an eigen matrix
-
-	for (int j = 0; j < no_of_chans; j++)
-		for (int i = 0; i < numSamples; i++)
-			buffer_result(i, j) = buff_data[i + (j * numSamples)];
-
-	cout << "First result in column 1 = " << buffer_result(0,0) << endl;
 
 	//******** DEMODULATION SETUP ********\\
 
@@ -292,3 +335,20 @@ VectorXcd Solver::AcquirePeaks(int numSamples, double Ts, int no_of_chans ) {
 };
 
 
+int read_data_buffer(int num_of_channels_used, int samps_per_chan) {
+
+	// Sorts the buffer into columns in an eigen matrix
+
+	for (int j = 0; j < num_of_channels_used; j++)
+		for (int i = 0; i < samps_per_chan; i++)
+			buffer_result(i, j) = buff_data[i + (j * samps_per_chan)];
+
+
+	cout << "\tFirst result in column 1 = " << buffer_result(0, 0) << endl;
+	//"\t" <<    // Print the fifth result
+	//"First result in column 2 = " << buffer_result(0, 1) << endl;    // Print the fifth result
+
+
+
+	return 0;
+}
