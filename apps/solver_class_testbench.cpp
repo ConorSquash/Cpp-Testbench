@@ -1,28 +1,10 @@
 #include <iostream>
-#include <array>
 #include <string>
-#include <vector>
-#include <chrono>
-
-#define _USE_MATH_DEFINES
-#include "math.h"
-
-#include "coil_spec.h"
-#include "field_coil_calc.h"
-#include "sensor_objective_function.h"
-
-#include "lsqcpp.h"
 #include "solver_class.h"
-
-
 #include <Dense>
 
-using Eigen::MatrixXd;
 using Eigen::VectorXd;
-
 using namespace std;
-using namespace std::chrono;
-
 
 
 int main() {
@@ -35,7 +17,7 @@ int main() {
 	int numSamps = 1000;
 	int chans = 1;
 
-	my_sensor.AcquireSamples(Fs,numSamps);
+	my_sensor.AcquireSamples(Fs,numSamps);   // Creates and fills a buffer of numSamps samples within the DAQ
 
 
 	//DEMODULATE
@@ -51,7 +33,8 @@ int main() {
 	initialGuess << 0.125, 0.13, 0.2, 1, 0;
 
 	VectorXd PandO(5); 	                        // Create a vector to store position and orientation info
-	PandO = my_sensor.Solve(peaks , initialGuess);
+
+	PandO = my_sensor.Solve(peaks , initialGuess);   // Pass initial guess and sensor flux and then solve
 
 	cout << "\n -> SOLVED P&O : " << endl;
 	cout << " x : " << PandO(0) << endl;
