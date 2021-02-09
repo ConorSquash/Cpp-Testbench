@@ -30,7 +30,8 @@ using namespace std;
 
 
 
-// Solver variables
+
+// Coil variables
 VectorXd sensor_flux(8);
 vector<vector<double>> x_matrix(8);
 vector<vector<double>> y_matrix(8);
@@ -39,6 +40,7 @@ vector<vector<double>> z_matrix(8);
 MatrixXd X_Matrix(8, 102);
 MatrixXd Y_Matrix(8, 102);
 MatrixXd Z_Matrix(8, 102);
+
 
 
 
@@ -69,15 +71,8 @@ struct MySolver
 
 
 
-
-
-
-
-vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initial_condition)
+int Solver::Setup() 
 {
-
-
-
 	//====================================================================
 
 
@@ -203,12 +198,20 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	cout << "\n -> COILS MODELLED" << endl;
 
+
+
+}
+
+
+// Optimizer 
+lsq::LevenbergMarquardt <double, MySolver> optimizer;
+
+int Solver::ConfigureSolver() 
+{
 	//====================================================================
 
-	lsq::LevenbergMarquardt <double, MySolver> optimizer;
 
-
-	optimizer.setMaxIterations(5);
+	optimizer.setMaxIterations(500);
 
 	optimizer.setMaxIterationsLM(250);
 
@@ -232,17 +235,30 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	// Set the minimum least squares error.
 	// The optimizer stops minimizing if the error falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 0).
-	optimizer.setMinError(1e-5);
+	optimizer.setMinError(1e-6);
 
 	// Set the the parametrized StepSize functor used for the step calculation.
 	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-10, 1.0, 0));
 
 	// Turn verbosity on, so the optimizer prints status updates after each iteration.
-	optimizer.setVerbosity(0);
+	optimizer.setVerbosity(2);
 
 	cout << "\n -> SOLVER CONFIGURED" << endl;
 
 	//====================================================================
+
+	return 0;
+
+}
+
+vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initial_condition)
+{
+
+
+
+	
+
+
 
 
 	// Call solver to solve for position vector variable xval()
@@ -261,12 +277,12 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 					initial_condition[3], 
 					initial_condition[4];
 
-	cout << "\n -> SOLVING FOR INITIAL GUESS" << endl;
-	cout << " x : " << initialGuess(0) << endl;
-	cout << " y : " << initialGuess(1) << endl;
-	cout << " x : " << initialGuess(2) << endl;
-	cout << " Pitch : " << initialGuess(3) << endl;
-	cout << " Yaw : " << initialGuess(4) << endl << endl;
+	//cout << "\n -> SOLVING FOR INITIAL GUESS" << endl;
+	//cout << " x : " << initialGuess(0) << endl;
+	//cout << " y : " << initialGuess(1) << endl;
+	//cout << " z : " << initialGuess(2) << endl;
+	//cout << " Pitch : " << initialGuess(3) << endl;
+	//cout << " Yaw : " << initialGuess(4) << endl;
 
 	int iterations = 0;
 
@@ -276,6 +292,8 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	// Start the optimization.
 	auto result = optimizer.minimize(initialGuess);
+
+	cout << " \n Iterations: " << result.iterations << endl;
 
 	/*
 	//cout << "Done! Converged: " << (result.converged ? "true" : "false")
@@ -298,4 +316,28 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	return PandO;
 
+}
+
+
+
+vector <double> Solver::generate_points(double points, double spacing, bool isZ)
+{
+	vector<double> values;
+	double current_point;
+
+	// Calculate the initial x and y point (fixed offset if it is a z point)
+	if (isZ)
+		current_point = 0.15;
+	else
+		 current_point = -((spacing / 2) + spacing * ((points / 2) - 1));
+
+	// Generate points
+	for (int i = 0; i < points; i++)
+	{
+		values.push_back(current_point);
+		current_point = current_point + spacing;
+	}
+
+
+	return values;
 }

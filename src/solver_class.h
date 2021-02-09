@@ -14,7 +14,9 @@ private:
 
 public:
 	
-
+	int Setup();
+	int ConfigureSolver();
+	vector <double> generate_points(double points, double spacing, bool isZ);
 	vector <double> Solve(vector <double> amplitudes, vector <double> initialGuess);
 
 };
