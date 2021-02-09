@@ -241,7 +241,7 @@ int Solver::ConfigureSolver()
 	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-10, 1.0, 0));
 
 	// Turn verbosity on, so the optimizer prints status updates after each iteration.
-	optimizer.setVerbosity(2);
+	optimizer.setVerbosity(0);
 
 	cout << "\n -> SOLVER CONFIGURED" << endl;
 
@@ -288,6 +288,13 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	for (int i = 0; i < 8; i++)
 		sensor_flux(i) = amplitudes[i];
+
+
+	// Variables to calculate position error and orientation error
+	double x_error, y_error, z_error, theta_error, phi_error;
+	double total_pos_error_squared = 0;
+	double total_theta_error_squared = 0;
+	double total_phi_error_squared = 0;
 	
 
 	// Start the optimization.

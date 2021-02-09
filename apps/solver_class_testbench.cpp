@@ -85,35 +85,55 @@ int main() {
 	y_points = my_sensor.generate_points(5, 0.05,false);
 	z_points = my_sensor.generate_points(1, 0.05,true);
 
-	for (int i = 0; i < z_points.size(); i++)
-	{
-		cout << z_points[i] << endl;
-	}
-
 
 	// Variables to calculate position error and orientation error
-	//double x_error, y_error, z_error, theta_error, phi_error;
-	//double total_pos_error_squared = 0;
-	//double total_theta_error_squared = 0;
-	//double total_phi_error_squared = 0;
+	double x_error, y_error, z_error, theta_error, phi_error;
+	double total_pos_error_squared = 0;
+	double total_theta_error_squared = 0;
+	double total_phi_error_squared = 0;
 
-	/*
+	int count = 0;
+
+	for (int k = 0; k < z_points.size(); k++)
+		for (int j = 0; j < y_points.size(); j++)
+			for (int i = 0; i < x_points.size(); i++)
+			{
+				PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   // Pass initial guess and sensor flux and then solve
+
+				cout << "\n -> SOLVED P&O " << endl;
+				cout << " x : " << PandO[0] << endl;
+				cout << " y : " << PandO[1] << endl;
+				cout << " z : " << PandO[2] << endl;
+				cout << " Pitch : " << PandO[3] << endl;
+				cout << " Yaw : " << PandO[4] << endl << endl;
+
+				x_error = x_points[j] - PandO[0];
+				y_error = y_points[i] - PandO[1];
+				z_error = z_points[k] - PandO[2];
+				theta_error = 0 - abs(PandO[3]);
+				phi_error = 0 - abs(PandO[4]);
+
+				cout << "This is the error : " << endl;
+				cout << "Error in x = " << x_error << endl;
+				cout << "Error in y = " << y_error << endl;
+				cout << "Error in z = " << z_error << endl;
+				cout << "Error in theta = " << theta_error << endl;
+				cout << "Error in phi = " << phi_error << endl << endl;
+
+				total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
+				total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
+				total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
+
+				//cout << "Total postion error so far : " << sqrt(total_pos_error_squared / count) << endl;
+
+				count++;
+
+			}
 	
-	for (int i = 0; i < num_of_points; i++)
-	{
-		PandO = my_sensor.Solve(magnetic_flux_matrix[i], initial_condition);   // Pass initial guess and sensor flux and then solve
+	cout << "\n\n\n" << endl;
 
-		cout << "\n -> SOLVED P&O " << endl;
-		cout << " x : " << PandO[0] << endl;
-		cout << " y : " << PandO[1] << endl;
-		cout << " z : " << PandO[2] << endl;
-		cout << " Pitch : " << PandO[3] << endl;
-		cout << " Yaw : " << PandO[4] << endl << endl;
-
-
-	}
-	
-	*/
+	double position_RMS_error = sqrt(total_pos_error_squared / num_of_points);
+	cout << "Total Position RMS error : " << position_RMS_error << endl;
 
 
 
