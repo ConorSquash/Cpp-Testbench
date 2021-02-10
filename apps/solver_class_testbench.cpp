@@ -2,8 +2,10 @@
 #include <string>
 #include "solver_class.h"
 #include <fstream>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 
 
@@ -19,6 +21,7 @@ int main() {
 
 	// READ TEXT FILE
 	ifstream file("simulated_data.txt");
+	//ifstream file("simulated_data_w_noise.txt");
 
 	if (file.is_open()) {
 
@@ -65,7 +68,7 @@ int main() {
 
 	my_sensor.ConfigureSolver();   // Sets the parameters of the solver (Max Iterations, minimum error....)
 
-	vector <double> initial_condition = { 0,0,0.1,0.5,0.5 };      // Provide an initial guess for x,y,z,theta,phi
+	vector <double> initial_condition = { 0,0,0.1,0,0 };      // Provide an initial guess for x,y,z,theta,phi
 
 	vector <double> PandO; 	                                   // Create a vector to store position and orientation info
 
@@ -92,13 +95,23 @@ int main() {
 	double total_theta_error_squared = 0;
 	double total_phi_error_squared = 0;
 
+	double total_time = 0;   	// Keep track of total time taken to solve 
+
 	int count = 0;
 
 	for (int k = 0; k < z_points.size(); k++)
 		for (int j = 0; j < y_points.size(); j++)
 			for (int i = 0; i < x_points.size(); i++)
 			{
+				auto start = high_resolution_clock::now();		// Get starting timepoint
+
 				PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   // Pass initial guess and sensor flux and then solve
+
+				auto stop = high_resolution_clock::now();        // Get stopping timepoint
+
+				auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
+
+				//cout << "Time taken by solver for this : " << duration.count() << " milliseconds \n" << endl;
 
 				cout << "\n -> SOLVED P&O " << endl;
 				cout << " x : " << PandO[0] << endl;
@@ -124,7 +137,7 @@ int main() {
 				total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
 				total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
 
-				//cout << "Total postion error so far : " << sqrt(total_pos_error_squared / count) << endl;
+				total_time = total_time + duration.count();
 
 				count++;
 
@@ -132,10 +145,18 @@ int main() {
 	
 	cout << "\n\n\n" << endl;
 
+	cout << "Total number of points solved for : " << num_of_points << endl;
+	cout << "Time taken by solver for this : " << total_time << " milliseconds \n\n" << endl;
+	cout << "Approximate solving rate ~ " << (num_of_points / total_time) * 1000 << " Hz " << endl;
+
 	double position_RMS_error = sqrt(total_pos_error_squared / num_of_points);
 	cout << "Total Position RMS error : " << position_RMS_error << endl;
 
+	double theta_RMS_error = sqrt(total_theta_error_squared / num_of_points);
+	cout << "Total Theta RMS error : " << theta_RMS_error << endl;
 
+	double phi_RMS_error = sqrt(total_phi_error_squared / num_of_points);
+	cout << "Total Phi RMS error : " << phi_RMS_error << endl;
 
 
 

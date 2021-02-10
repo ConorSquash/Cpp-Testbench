@@ -73,20 +73,12 @@ struct MySolver
 
 int Solver::Setup() 
 {
-	//====================================================================
 
-
-		// Define side length of outer square
-		// Define width of each track
-		// Define spacing between tracks
-		// Define thickness of the emitter coil PCB
-		// Define total number of turns per coil
-
-	double l = 70e-03;
-	double w = 0.5e-03;
-	double s = 0.25e-03;
-	double thickness = 1.6e-03;
-	int Nturns = 25;
+	double l = 70e-03;		        // Define side length of outer square
+	double w = 0.5e-03;		        // Define width of each track
+	double s = 0.25e-03;		    // Define spacing between tracks
+	double thickness = 1.6e-03;		// Define thickness of the emitter coil PCB
+	int Nturns = 25;		        // Define total number of turns per coil
 
 
 	// Generate coil filaments
@@ -208,8 +200,6 @@ lsq::LevenbergMarquardt <double, MySolver> optimizer;
 
 int Solver::ConfigureSolver() 
 {
-	//====================================================================
-
 
 	optimizer.setMaxIterations(500);
 
@@ -220,7 +210,6 @@ int Solver::ConfigureSolver()
 	optimizer.setLambdaDecrease(1e-3);
 
 	optimizer.setThreads(0);
-
 
 	// Set the minimum length of the gradient.
 	// The optimizer stops minimizing if the gradient length falls below this value.
@@ -245,7 +234,6 @@ int Solver::ConfigureSolver()
 
 	cout << "\n -> SOLVER CONFIGURED" << endl;
 
-	//====================================================================
 
 	return 0;
 
@@ -254,21 +242,10 @@ int Solver::ConfigureSolver()
 vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initial_condition)
 {
 
-
-
-	
-
-
-
-
 	// Call solver to solve for position vector variable xval()
 	// Magnetic coil filaments constants passed to the objective function
 	// The simulated sensor calibration contant is passed to the objective function
 	// Objective function is called in Struct 'MySolver' at the top of the program
-
-
-
-	//auto start = high_resolution_clock::now();		// Get starting timepoint
 
 	VectorXd initialGuess(5);
 	initialGuess << initial_condition[0], 
@@ -288,13 +265,6 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	for (int i = 0; i < 8; i++)
 		sensor_flux(i) = amplitudes[i];
-
-
-	// Variables to calculate position error and orientation error
-	double x_error, y_error, z_error, theta_error, phi_error;
-	double total_pos_error_squared = 0;
-	double total_theta_error_squared = 0;
-	double total_phi_error_squared = 0;
 	
 
 	// Start the optimization.
@@ -310,13 +280,9 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	//cout << "Final xval: " << result.xval.transpose() << std::endl;
 
 
-	//auto stop = high_resolution_clock::now();        // Get stopping timepoint
-	//auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
-	//cout << "Number of times solved : " << iterations << endl;
-	//cout << "Time taken by solver for this : " << duration.count() << " milliseconds" << endl;
 	*/
 
-	vector <double> PandO;
+	vector <double> PandO;    // Convert from eigen to standard C++ vector
 
 	for (int i = 0; i < 5; i++)
 		PandO.push_back(result.xval(i));
