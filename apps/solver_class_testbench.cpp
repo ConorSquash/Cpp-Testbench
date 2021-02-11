@@ -4,6 +4,9 @@
 #include <fstream>
 #include <chrono>
 
+#define _USE_MATH_DEFINES
+#include "math.h"
+
 using namespace std;
 using namespace std::chrono;
 
@@ -68,7 +71,7 @@ int main() {
 
 	my_sensor.ConfigureSolver();   // Sets the parameters of the solver (Max Iterations, minimum error....)
 
-	vector <double> initial_condition = { 0,0,0.1,0,0 };      // Provide an initial guess for x,y,z,theta,phi
+	vector <double> initial_condition = { 0, 0, 0.1,M_PI_2, M_PI_2 };      // Provide an initial guess for x,y,z,theta,phi
 
 	vector <double> PandO; 	                                   // Create a vector to store position and orientation info
 
@@ -123,8 +126,8 @@ int main() {
 				x_error = x_points[j] - PandO[0];
 				y_error = y_points[i] - PandO[1];
 				z_error = z_points[k] - PandO[2];
-				theta_error = 0 - abs(PandO[3]);
-				phi_error = 0 - abs(PandO[4]);
+				theta_error = M_PI/3 - abs(PandO[3]);
+				phi_error = M_PI_2 - abs(PandO[4]);
 
 				cout << "This is the error : " << endl;
 				cout << "Error in x = " << x_error << endl;

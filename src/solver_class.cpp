@@ -200,7 +200,7 @@ lsq::LevenbergMarquardt <double, MySolver> optimizer;
 
 int Solver::ConfigureSolver() 
 {
-
+	
 	optimizer.setMaxIterations(500);
 
 	optimizer.setMaxIterationsLM(250);
@@ -224,7 +224,7 @@ int Solver::ConfigureSolver()
 	// Set the minimum least squares error.
 	// The optimizer stops minimizing if the error falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 0).
-	optimizer.setMinError(1e-6);
+	optimizer.setMinError(1e-9);
 
 	// Set the the parametrized StepSize functor used for the step calculation.
 	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-10, 1.0, 0));
