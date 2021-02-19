@@ -23,7 +23,10 @@ int main() {
 
 
 	// READ TEXT FILE
-	ifstream file("simulated_data.txt");
+	//ifstream file("yOriented-10cm.txt");
+	//ifstream file("yOriented-25cm.txt");
+	ifstream file("zOriented-10cm.txt");
+
 	//ifstream file("simulated_data_w_noise.txt");
 
 	if (file.is_open()) {
@@ -71,9 +74,9 @@ int main() {
 
 	my_sensor.ConfigureSolver();   // Sets the parameters of the solver (Max Iterations, minimum error....)
 
-	vector <double> initial_condition = { 0, 0, 0.1,M_PI_2, M_PI_2 };      // Provide an initial guess for x,y,z,theta,phi
+	vector <double> initial_condition = { -0.1, -0.1, 0.1, M_PI_2, 0 };      // Provide an initial guess for x,y,z,theta,phi
 
-	vector <double> PandO; 	                                   // Create a vector to store position and orientation info
+	vector <double> PandO; 	        // Create a vector to store position and orientation info
 
 	cout << "\n -> SOLVING FOR INITIAL GUESS" << endl;
 	cout << " x : " << initial_condition[0] << endl;
@@ -114,35 +117,41 @@ int main() {
 
 				auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
 
+				
+
 				//cout << "Time taken by solver for this : " << duration.count() << " milliseconds \n" << endl;
 
 				cout << "\n -> SOLVED P&O " << endl;
-				cout << " x : " << PandO[0] << endl;
-				cout << " y : " << PandO[1] << endl;
-				cout << " z : " << PandO[2] << endl;
-				cout << " Pitch : " << PandO[3] << endl;
-				cout << " Yaw : " << PandO[4] << endl << endl;
+				cout << " x : " << PandO[0] * 100 << " cm" << endl;
+				cout << " y : " << PandO[1] * 100 << " cm" << endl;
+				cout << " z : " << PandO[2] * 100 << " cm" << endl;
+				cout << " Pitch : " << PandO[3] << " radians" << endl;
+				cout << " Yaw : " << PandO[4] << " radians" << endl << endl;
 
-				x_error = x_points[j] - PandO[0];
-				y_error = y_points[i] - PandO[1];
-				z_error = z_points[k] - PandO[2];
-				theta_error = M_PI/3 - abs(PandO[3]);
-				phi_error = M_PI_2 - abs(PandO[4]);
+				//x_error = x_points[j] - PandO[0];
+				//y_error = y_points[i] - PandO[1];
+				//z_error = z_points[k] - PandO[2];
+				//theta_error = M_PI/3 - abs(PandO[3]);
+				//phi_error = M_PI_2 - abs(PandO[4]);
 
-				cout << "This is the error : " << endl;
-				cout << "Error in x = " << x_error << endl;
-				cout << "Error in y = " << y_error << endl;
-				cout << "Error in z = " << z_error << endl;
-				cout << "Error in theta = " << theta_error << endl;
-				cout << "Error in phi = " << phi_error << endl << endl;
+				//cout << "This is the error : " << endl;
+				//cout << "Error in x = " << x_error << endl;
+				//cout << "Error in y = " << y_error << endl;
+				//cout << "Error in z = " << z_error << endl;
+				//cout << "Error in theta = " << theta_error << endl;
+				//cout << "Error in phi = " << phi_error << endl << endl;
 
-				total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
-				total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
-				total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
+				//total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
+				//total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
+				//total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
 
 				total_time = total_time + duration.count();
 
 				count++;
+
+				//initial_condition = PandO;           // Set the previous solved point as the new initial condition
+
+				//getchar();
 
 			}
 	
@@ -152,14 +161,14 @@ int main() {
 	cout << "Time taken by solver for this : " << total_time << " milliseconds \n\n" << endl;
 	cout << "Approximate solving rate ~ " << (num_of_points / total_time) * 1000 << " Hz " << endl;
 
-	double position_RMS_error = sqrt(total_pos_error_squared / num_of_points);
-	cout << "Total Position RMS error : " << position_RMS_error << endl;
+	//double position_RMS_error = sqrt(total_pos_error_squared / num_of_points);
+	//cout << "Total Position RMS error : " << position_RMS_error << endl;
 
-	double theta_RMS_error = sqrt(total_theta_error_squared / num_of_points);
-	cout << "Total Theta RMS error : " << theta_RMS_error << endl;
+	//double theta_RMS_error = sqrt(total_theta_error_squared / num_of_points);
+	//cout << "Total Theta RMS error : " << theta_RMS_error << endl;
 
-	double phi_RMS_error = sqrt(total_phi_error_squared / num_of_points);
-	cout << "Total Phi RMS error : " << phi_RMS_error << endl;
+	//double phi_RMS_error = sqrt(total_phi_error_squared / num_of_points);
+	//cout << "Total Phi RMS error : " << phi_RMS_error << endl;
 
 
 
