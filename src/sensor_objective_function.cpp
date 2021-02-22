@@ -26,7 +26,7 @@ using Eigen::VectorXd;
 
 
 
-void sensor_objective_function(VectorXd& currentPandO, VectorXd& fluxReal, MatrixXd & xcoil, MatrixXd & ycoil, MatrixXd & zcoil, vector<vector<double>>& calibration, VectorXd& out)
+void sensor_objective_function(VectorXd& currentPandO, VectorXd& fluxReal, MatrixXd & xcoil, MatrixXd & ycoil, MatrixXd & zcoil, VectorXd& calibration, VectorXd& out)
 {
 
     double x = currentPandO(0);
@@ -43,7 +43,9 @@ void sensor_objective_function(VectorXd& currentPandO, VectorXd& fluxReal, Matri
 
     VectorXd fluxModel(8);
 
-    fluxModel = ((Hx.array() * sin(theta) * cos(phi)) + (Hy.array() * sin(theta) * sin(phi)) + (Hz.array() * cos(theta))); 
+    //calibration.transposeInPlace();
+
+    fluxModel = calibration.array() * ((Hx.array() * sin(theta) * cos(phi)) + (Hy.array() * sin(theta) * sin(phi)) + (Hz.array() * cos(theta))); 
 
     out = fluxModel - fluxReal;
 

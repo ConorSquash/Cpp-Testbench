@@ -74,6 +74,10 @@ int main() {
 
 	my_sensor.ConfigureSolver();   // Sets the parameters of the solver (Max Iterations, minimum error....)
 
+	vector <double> cal = { -0.4324,-0.2946, -0.2106,-0.1565,-0.1234,-0.0984,-0.0785,-0.0710};   
+
+	my_sensor.SetCalibration(cal);    // Set the calibration values 
+
 	vector <double> initial_condition = { -0.1, -0.1, 0.1, M_PI_2, 0 };      // Provide an initial guess for x,y,z,theta,phi
 
 	vector <double> PandO; 	        // Create a vector to store position and orientation info
@@ -102,6 +106,7 @@ int main() {
 	double total_phi_error_squared = 0;
 
 	double total_time = 0;   	// Keep track of total time taken to solve 
+	vector <double> times;      // Create a vector to store the time it took to solve for each point
 
 	int count = 0;
 
@@ -117,7 +122,7 @@ int main() {
 
 				auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
 
-				
+				times.push_back(duration.count());        // Save the time taken to solve for this point
 
 				//cout << "Time taken by solver for this : " << duration.count() << " milliseconds \n" << endl;
 
@@ -169,6 +174,13 @@ int main() {
 
 	//double phi_RMS_error = sqrt(total_phi_error_squared / num_of_points);
 	//cout << "Total Phi RMS error : " << phi_RMS_error << endl;
+
+
+
+	cout << "\n\n Time to solve for each point in ms: " << endl;
+
+	for (int i = 0; i < times.size(); i++)
+		cout << times[i] << endl;
 
 
 

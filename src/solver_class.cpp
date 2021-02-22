@@ -42,9 +42,9 @@ MatrixXd Y_Matrix(8, 102);
 MatrixXd Z_Matrix(8, 102);
 
 
-
-
-
+// Create vector of calibration values (default row of 1s if not set)
+//vector<double> calibration = { 1,1,1,1,1,1,1,1 };
+VectorXd K(8);
 
 struct MySolver
 {
@@ -59,9 +59,9 @@ struct MySolver
 
 		VectorXd out_vector(8);        // A vector to get the result of FluxModel - FluxReal
 
-		vector<vector<double>> calibration = { {1},{1},{1},{1},{1},{1},{1},{1} };    // Create vector of calibration values (column)
+		//vector<vector<double>> calibration = { {1},{1},{1},{1},{1},{1},{1},{1} };    // Create vector of calibration values (column)
 
-		sensor_objective_function(currentPandO, sensor_flux, X_Matrix, Y_Matrix, Z_Matrix, calibration, out_vector);
+		sensor_objective_function(currentPandO, sensor_flux, X_Matrix, Y_Matrix, Z_Matrix, K, out_vector);
 
 		fval = out_vector;
 
@@ -237,6 +237,17 @@ int Solver::ConfigureSolver()
 
 	return 0;
 
+}
+
+int Solver::SetCalibration(vector <double> k)
+{
+	// Convert cpp vector to eigen vector
+
+	for (int i = 0; i < K.size(); i++)
+		K[i] = k[i];
+	
+
+	return 0;
 }
 
 vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initial_condition)

@@ -10,7 +10,7 @@ using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-void sensor_objective_function(VectorXd& currentPandO, VectorXd& fluxReal, MatrixXd& xcoil, MatrixXd& ycoil, MatrixXd& zcoil, vector<vector<double>>& calibration, VectorXd& out);
+void sensor_objective_function(VectorXd& currentPandO, VectorXd& fluxReal, MatrixXd& xcoil, MatrixXd& ycoil, MatrixXd& zcoil, VectorXd& calibration, VectorXd& out);
 
 
 #endif
