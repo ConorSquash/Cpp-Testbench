@@ -29,7 +29,7 @@ using Eigen::VectorXf;
 using namespace std;
 
 
-
+double wrapMax(double x, double max);
 
 // Coil variables
 VectorXd sensor_flux(8);
@@ -243,9 +243,12 @@ int Solver::SetCalibration(vector <double> k)
 {
 	// Convert cpp vector to eigen vector
 
+
+
 	for (int i = 0; i < K.size(); i++)
 		K[i] = k[i];
 	
+	cout << "\n -> CALIBRATION APPLIED" << endl;
 
 	return 0;
 }
@@ -295,30 +298,46 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	vector <double> PandO;    // Convert from eigen to standard C++ vector
 
-	for (int i = 0; i < 5; i++)
-		PandO.push_back(result.xval(i));
+	for (int i = 0; i < 3; i++)                     // RETURN X,Y,Z IN CM
+		PandO.push_back(result.xval(i) * 100);
+
+	for (int i = 3; i < 5; i++)
+		PandO.push_back(result.xval(i) * (180 / M_PI));    // Convert to degrees
+
+	PandO[3] = 180 - wrapMax(PandO[3],180);     // Wrap theta from 0 - 180 degrees
+	PandO[4] = wrapMax(abs(PandO[4]), 360);     // Wrap phi to 0 - 360 degrees
+
+	if (PandO[2] < 0)               // If z is negative, take positive value of z and mirror theta
+	{
+		PandO[2] = abs(PandO[2]);
+		PandO[3] = 180 - PandO[3];
+	}
 
 	return PandO;
+}
 
+double wrapMax(double x, double max)
+{
+	return fmod(max + fmod(x, max), max);		// integer math: `(max + x % max) % max` 
 }
 
 
 
-vector <double> Solver::generate_points(double points, double spacing, bool isZ)
+vector <double> Solver::generate_points(double points, double spacing, bool isZ, double offset)
 {
 	vector<double> values;
 	double current_point;
 
 	// Calculate the initial x and y point (fixed offset if it is a z point)
 	if (isZ)
-		current_point = 0.15;
+		current_point = spacing;
 	else
-		 current_point = -((spacing / 2) + spacing * ((points / 2) - 1));
+		 current_point = -((spacing / 2) + spacing * ((points / 2) - 1)) + offset;
 
 	// Generate points
 	for (int i = 0; i < points; i++)
 	{
-		values.push_back(current_point);
+		values.push_back(current_point * 100);
 		current_point = current_point + spacing;
 	}
 

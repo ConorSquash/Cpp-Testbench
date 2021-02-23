@@ -17,7 +17,7 @@ public:
 	int Setup();
 	int ConfigureSolver();
 	int SetCalibration(vector <double> k);
-	vector <double> generate_points(double points, double spacing, bool isZ);
+	vector <double> generate_points(double points, double spacing, bool isZ, double offset);
 	vector <double> Solve(vector <double> amplitudes, vector <double> initialGuess);
 
 };
