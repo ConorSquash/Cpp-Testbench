@@ -21,6 +21,12 @@ int main() {
 	vector<double> magnetic_flux_vector;
 	vector<double> magnetic_flux_row;
 
+	// Create text file to write P&O data to
+	ofstream results_file;
+
+	results_file.open("y10cm_results_cpp.txt");
+	//results_file.open("y25cm_results_cpp.txt");
+	//results_file.open("z10cm_results_cpp.txt");
 
 	// READ TEXT FILE
 	ifstream file("yOriented-10cm.txt");
@@ -89,6 +95,8 @@ int main() {
 	cout << " Pitch : " << initial_condition[3] << endl;
 	cout << " Yaw : " << initial_condition[4] << endl;
 
+	cout << "\n\n";
+
 
 	// Generate the points identical to those used to get the simulated data 
 	// in Matlab for error calculations later on
@@ -133,32 +141,39 @@ int main() {
 				//cout << "Time taken by solver for this : " << duration.count() << " milliseconds \n" << endl;
 
 				//Print out what point its at in the grid
-				cout << "\n Test point (cm) ->" "\t x : " << x_points[j] << "\t y : " 
-					<< y_points[i]  << "\t z : " << z_points[k]  << endl;
+				//cout << "\n Test point (cm) ->" "\t x : " << x_points[j] << "\t y : " 
+					//<< y_points[i]  << "\t z : " << z_points[k]  << endl;
 
-				cout << "\n -> SOLVED P&O " << endl;
-				cout << " x : " << PandO[0]  << " cm" << endl;
-				cout << " y : " << PandO[1]  << " cm" << endl;
-				cout << " z : " << PandO[2]  << " cm" << endl;
-				cout << " Pitch : " << PandO[3] << " degrees" << endl;
-				cout << " Yaw : " << PandO[4]  << " degrees" << endl << endl;
+				//cout << "\n -> SOLVED P&O " << endl;
+				//cout << " x : " << PandO[0]  << " cm" << endl;
+				//cout << " y : " << PandO[1]  << " cm" << endl;
+				//cout << " z : " << PandO[2]  << " cm" << endl;
+				//cout << " Pitch : " << PandO[3] << " degrees" << endl;
+				//cout << " Yaw : " << PandO[4]  << " degrees" << endl << endl;
 
-				x_error = x_points[j] - PandO[0];
-				y_error = y_points[i] - PandO[1];
-				z_error = z_points[k] - PandO[2];
-				theta_error = 90 - PandO[3];
-				phi_error = 90 - PandO[4];
+				cout << "Point " << count + 1 << " : [" 
+					<< PandO[0] << " " << PandO[1] << " " << PandO[2] << " "
+					<< PandO[3] << " " << PandO[4] << " " << "]" << endl;
 
-				cout << "This is the error : " << endl;
-				cout << "Error in x = " << x_error * 10 << " mm" << endl;
-				cout << "Error in y = " << y_error * 10 << " mm" << endl;
-				cout << "Error in z = " << z_error * 10 << " mm" << endl;
-				cout << "Error in theta = " << theta_error << " degrees" << endl;
-				cout << "Error in phi = " << phi_error << " degrees" << endl << endl;
+				results_file << PandO[0] << "," << PandO[1] << "," << PandO[2] << ","
+					<< PandO[3] << "," << PandO[4] << "," << endl;
 
-				total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
-				total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
-				total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
+				//x_error = x_points[j] - PandO[0];
+				//y_error = y_points[i] - PandO[1];
+				//z_error = z_points[k] - PandO[2];
+				//theta_error = 90 - PandO[3];
+				//phi_error = 90 - PandO[4];
+
+				//cout << "This is the error : " << endl;
+				//cout << "Error in x = " << x_error * 10 << " mm" << endl;
+				//cout << "Error in y = " << y_error * 10 << " mm" << endl;
+				//cout << "Error in z = " << z_error * 10 << " mm" << endl;
+				//cout << "Error in theta = " << theta_error << " degrees" << endl;
+				//cout << "Error in phi = " << phi_error << " degrees" << endl << endl;
+
+				//total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
+				//total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
+				//total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
 
 				total_time = total_time + duration.count();
 
@@ -169,6 +184,8 @@ int main() {
 				//getchar();
 
 			}
+
+	results_file.close();
 	
 	cout << "\n\n\n" << endl;
 
@@ -189,10 +206,10 @@ int main() {
 
 
 
-	cout << "\n\n Time to solve for each point in ms: " << endl;
+	//cout << "\n\n Time to solve for each point in ms: " << endl;
 
-	for (int i = 0; i < times.size(); i++)
-		cout << times[i] << endl;
+	//for (int i = 0; i < times.size(); i++)
+		//cout << times[i] << endl;
 
 
 

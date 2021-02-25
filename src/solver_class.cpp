@@ -284,7 +284,7 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	// Start the optimization.
 	auto result = optimizer.minimize(initialGuess);
 
-	cout << " \n Iterations: " << result.iterations << endl;
+	//cout << " \n Iterations: " << result.iterations << endl;
 
 	/*
 	//cout << "Done! Converged: " << (result.converged ? "true" : "false")
@@ -298,6 +298,8 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	vector <double> PandO;    // Convert from eigen to standard C++ vector
 
+
+	/*
 	for (int i = 0; i < 3; i++)                     // RETURN X,Y,Z IN CM
 		PandO.push_back(result.xval(i) * 100);
 
@@ -311,6 +313,20 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	{
 		PandO[2] = abs(PandO[2]);
 		PandO[3] = 180 - PandO[3];
+	}
+	*/
+
+	for (int i = 0; i < 5; i++)                // Return x,y,z in metres and theta/phi in radians
+		PandO.push_back(result.xval(i));
+
+	PandO[3] = wrapMax(PandO[3], M_PI);     // Wrap theta from 0 - pi degrees
+	//PandO[3] = 180 - wrapMax(PandO[3], M_PI);     // Wrap theta from 0 - pi degrees
+	PandO[4] = wrapMax(abs(PandO[4]), 2 * M_PI);     // Wrap phi to 0 - 2pi degrees
+
+	if (PandO[2] < 0)               // If z is negative, take positive value of z and mirror theta
+	{
+		PandO[2] = abs(PandO[2]);
+		PandO[3] = M_PI - PandO[3];
 	}
 
 	return PandO;
