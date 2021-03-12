@@ -11,7 +11,9 @@ using namespace std;
 int main() {
 
 	//SAMPLE
-	DAQ my_channel;
+
+	double Fs, samples;
+	DAQ my_channel(Fs, samples);
 	
 	
 	double Fs = 100e3;

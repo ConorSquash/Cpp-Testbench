@@ -9,7 +9,7 @@ add_subdirectory(extern/eigen)
 add_subdirectory(extern/least-squares)
 add_subdirectory(extern/nidaq)
 add_subdirectory(extern/sensor-data)
-
+add_subdirectory(extern/OpenIGTLink)
 # Sources for generated libraries
 add_subdirectory(src)
 
