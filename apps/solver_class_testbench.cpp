@@ -24,13 +24,13 @@ int main() {
 	// Create text file to write P&O data to
 	ofstream results_file;
 
-	results_file.open("y10cm_results_cpp.txt");
-	//results_file.open("y25cm_results_cpp.txt");
+	//results_file.open("y10cm_results_cpp.txt");
+	results_file.open("y25cm_results_cpp.txt");
 	//results_file.open("z10cm_results_cpp.txt");
 
 	// READ TEXT FILE
-	ifstream file("yOriented-10cm.txt");
-	//ifstream file("yOriented-25cm.txt");
+	//ifstream file("yOriented-10cm.txt");
+	ifstream file("yOriented-25cm.txt");
 	//ifstream file("zOriented-10cm.txt");
 
 	//ifstream file("simulated_data_w_noise.txt");
@@ -80,11 +80,11 @@ int main() {
 
 	my_sensor.ConfigureSolver();   // Sets the parameters of the solver (Max Iterations, minimum error....)
 
-	vector <double> cal = { -0.4324,-0.2946, -0.2106,-0.1565,-0.1234,-0.0984,-0.0785,-0.0710};   
+	vector <double> cal = { -0.4324,-0.2946, -0.2106,-0.1565,-0.1234,-0.0984,-0.0785,-0.0710 };
 
 	my_sensor.SetCalibration(cal);    // Set the calibration values 
 
-	vector <double> initial_condition = { 0, 0, 0.125, M_PI_2, M_PI_2 };      // Provide an initial guess for x,y,z,theta,phi
+	vector <double> initial_condition = { 0, 0, 0.275, M_PI_2, M_PI_2 };      // Provide an initial guess for x,y,z,theta,phi
 
 	vector <double> PandO; 	        // Create a vector to store position and orientation info
 
@@ -100,15 +100,15 @@ int main() {
 
 	// Generate the points identical to those used to get the simulated data 
 	// in Matlab for error calculations later on
-	vector <double> x_points,y_points,z_points;
+	vector <double> x_points, y_points, z_points;
 
 	// Offsets of the grid of points used in the actual test
 	double deltaX = -9.029e-04;
 	double deltaY = -0.00723;
 
-	x_points = my_sensor.generate_points(7, 0.048,false, deltaX);
-	y_points = my_sensor.generate_points(7, 0.048,false, deltaY);
-	z_points = my_sensor.generate_points(1, 0.12,true,0);
+	x_points = my_sensor.generate_points(7, 0.048, false, deltaX);
+	y_points = my_sensor.generate_points(7, 0.048, false, deltaY);
+	z_points = my_sensor.generate_points(1, 0.12, true, 0);
 
 
 	// Variables to calculate position error and orientation error
@@ -119,80 +119,100 @@ int main() {
 
 	double total_time = 0;   	// Keep track of total time taken to solve 
 	vector <double> times;      // Create a vector to store the time it took to solve for each point
-
+	double looped_total_time = 0;
 	int count = 0;
 
-	for (int k = 0; k < z_points.size(); k++)
-		for (int j = 0; j < y_points.size(); j++)
-			for (int i = 0; i < x_points.size(); i++)
-			{
-				auto start = high_resolution_clock::now();		// Get starting timepoint
+	int cntr = 0;
 
-				//initial_condition = { x_points[j], y_points[i], 0.12, M_PI_2, M_PI_2 };
 
-				PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   // Pass initial guess and sensor flux and then solve
+	//for (int a = 0; a < 50; a++)
+	//{
 
-				auto stop = high_resolution_clock::now();        // Get stopping timepoint
+		count = 0;
+		total_time = 0;
 
-				auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
+		for (int k = 0; k < z_points.size(); k++)
+			for (int j = 0; j < y_points.size(); j++)
+				for (int i = 0; i < x_points.size(); i++)
+				{
+					// Dynamic initial conditions
 
-				times.push_back(duration.count());        // Save the time taken to solve for this point
+					//initial_condition = { x_points[j], y_points[i], 0.12, M_PI, 0 };
+					//if (count % 6 == 0)
+					//	initial_condition = { x_points[j+1], y_points[i+1], 0.12, M_PI, 0 };
 
-				//cout << "Time taken by solver for this : " << duration.count() << " milliseconds \n" << endl;
 
-				//Print out what point its at in the grid
-				//cout << "\n Test point (cm) ->" "\t x : " << x_points[j] << "\t y : " 
-					//<< y_points[i]  << "\t z : " << z_points[k]  << endl;
+					auto start = high_resolution_clock::now();		// Get starting timepoint
 
-				//cout << "\n -> SOLVED P&O " << endl;
-				//cout << " x : " << PandO[0]  << " cm" << endl;
-				//cout << " y : " << PandO[1]  << " cm" << endl;
-				//cout << " z : " << PandO[2]  << " cm" << endl;
-				//cout << " Pitch : " << PandO[3] << " degrees" << endl;
-				//cout << " Yaw : " << PandO[4]  << " degrees" << endl << endl;
+					PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   // Pass initial guess and sensor flux and then solve
 
-				cout << "Point " << count + 1 << " : [" 
-					<< PandO[0] << " " << PandO[1] << " " << PandO[2] << " "
-					<< PandO[3] << " " << PandO[4] << " " << "]" << endl;
+					auto stop = high_resolution_clock::now();        // Get stopping timepoint
 
-				results_file << PandO[0] << "," << PandO[1] << "," << PandO[2] << ","
-					<< PandO[3] << "," << PandO[4] << "," << endl;
+					auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
 
-				//x_error = x_points[j] - PandO[0];
-				//y_error = y_points[i] - PandO[1];
-				//z_error = z_points[k] - PandO[2];
-				//theta_error = 90 - PandO[3];
-				//phi_error = 90 - PandO[4];
+					//times.push_back(duration.count());        // Save the time taken to solve for this point
 
-				//cout << "This is the error : " << endl;
-				//cout << "Error in x = " << x_error * 10 << " mm" << endl;
-				//cout << "Error in y = " << y_error * 10 << " mm" << endl;
-				//cout << "Error in z = " << z_error * 10 << " mm" << endl;
-				//cout << "Error in theta = " << theta_error << " degrees" << endl;
-				//cout << "Error in phi = " << phi_error << " degrees" << endl << endl;
+					//cout << "Time taken by solver for this : " << duration.count() << " milliseconds \n" << endl;
 
-				//total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
-				//total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
-				//total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
+					//Print out what point its at in the grid
+					//cout << "\n Test point (cm) ->" "\t x : " << x_points[j] << "\t y : " 
+						//<< y_points[i]  << "\t z : " << z_points[k]  << endl;
 
-				total_time = total_time + duration.count();
+					//cout << "\n -> SOLVED P&O " << endl;
+					//cout << " x : " << PandO[0]  << " cm" << endl;
+					//cout << " y : " << PandO[1]  << " cm" << endl;
+					//cout << " z : " << PandO[2]  << " cm" << endl;
+					//cout << " Pitch : " << PandO[3] << " degrees" << endl;
+					//cout << " Yaw : " << PandO[4]  << " degrees" << endl << endl;
 
-				count++;
+					//cout << "Point " << count + 1 << " : [" 
+					//	<< PandO[0] << " " << PandO[1] << " " << PandO[2] << " "
+					//	<< PandO[3] << " " << PandO[4] << " " << "]" << endl;
 
-				//initial_condition = PandO;           // Set the previous solved point as the new initial condition
+					//results_file << PandO[0] << "," << PandO[1] << "," << PandO[2] << ","
+					//	<< PandO[3] << "," << PandO[4] << "," << endl;
 
-				//getchar();
+					//x_error = x_points[j] - PandO[0];
+					//y_error = y_points[i] - PandO[1];
+					//z_error = z_points[k] - PandO[2];
+					//theta_error = 90 - PandO[3];
+					//phi_error = 90 - PandO[4];
 
-			}
+					//cout << "This is the error : " << endl;
+					//cout << "Error in x = " << x_error * 10 << " mm" << endl;
+					//cout << "Error in y = " << y_error * 10 << " mm" << endl;
+					//cout << "Error in z = " << z_error * 10 << " mm" << endl;
+					//cout << "Error in theta = " << theta_error << " degrees" << endl;
+					//cout << "Error in phi = " << phi_error << " degrees" << endl << endl;
+
+					//total_pos_error_squared = pow(x_error, 2) + pow(y_error, 2) + pow(z_error, 2) + total_pos_error_squared;
+					//total_theta_error_squared =  pow(theta_error, 2) + total_theta_error_squared;
+					//total_phi_error_squared = pow(phi_error, 2) + total_phi_error_squared;
+
+					total_time = total_time + duration.count();
+
+					count++;
+
+					//initial_condition = PandO;           // Set the previous solved point as the new initial condition
+
+					//getchar();
+
+				}
+
+		looped_total_time = looped_total_time + total_time;
+		cntr++;
+
+	//}
 
 	results_file.close();
 	
 	cout << "\n\n\n" << endl;
 
-	cout << "Total number of points solved for : " << num_of_points << endl << endl;
-	cout << "Time taken by solver for this : " << total_time << " milliseconds \n" << endl;
-	cout << "Average time per solve ~ " <<  total_time / num_of_points  << " ms \n" << endl;
-	cout << "Approximate solving rate ~ " << (num_of_points / total_time) * 1000 << " Hz " << endl;
+	cout << "Total number of points solved for : " << num_of_points * cntr << endl << endl;
+	cout << "Time taken by solver for all points : " << looped_total_time << " milliseconds \n" << endl;
+	cout << "Time taken by solver for one grid : " << looped_total_time / cntr << " milliseconds \n" << endl;
+	cout << "Average time per solve ~ " << looped_total_time / (num_of_points * cntr)  << " ms \n" << endl;
+	cout << "Approximate solving rate ~ " << (num_of_points * cntr / looped_total_time) * 1000 << " Hz " << endl;
 
 
 	//double position_RMS_error = sqrt(total_pos_error_squared / num_of_points);

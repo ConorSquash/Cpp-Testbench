@@ -14,6 +14,7 @@ public:
 	
 
 	int AcquireSamples(double Fs, double samples);
+	int DemodSetup(double frequency, double samples);
 
 
 };

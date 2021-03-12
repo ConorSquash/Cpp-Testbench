@@ -201,30 +201,30 @@ lsq::LevenbergMarquardt <double, MySolver> optimizer;
 int Solver::ConfigureSolver() 
 {
 	
-	optimizer.setMaxIterations(500);
+	optimizer.setMaxIterations(1000);
 
-	optimizer.setMaxIterationsLM(250);
+	optimizer.setMaxIterationsLM(1000);
 
-	optimizer.setLambdaIncrease(5);
+	optimizer.setLambdaIncrease(3);
 
-	optimizer.setLambdaDecrease(1e-3);
+	optimizer.setLambdaDecrease(0.005);
 
 	optimizer.setThreads(0);
 
 	// Set the minimum length of the gradient.
 	// The optimizer stops minimizing if the gradient length falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 1e-9).
-	optimizer.setMinGradientLength(1e-9);
+	optimizer.setMinGradientLength(1e-15);
 
 	// Set the minimum length of the step.
 	// The optimizer stops minimizing if the step length falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 1e-9).
-	optimizer.setMinStepLength(1e-9);
+	optimizer.setMinStepLength(1e-15);
 
 	// Set the minimum least squares error.
 	// The optimizer stops minimizing if the error falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 0).
-	optimizer.setMinError(1e-9);
+	optimizer.setMinError(1e-15);
 
 	// Set the the parametrized StepSize functor used for the step calculation.
 	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-10, 1.0, 0));
@@ -286,10 +286,12 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	//cout << " \n Iterations: " << result.iterations << endl;
 
-	/*
+	
 	//cout << "Done! Converged: " << (result.converged ? "true" : "false")
 		//<< " Iterations: " << result.iterations << std::endl;
 
+
+	/*
 	 //do something with final function value
 	//cout << "Final xval: " << result.xval.transpose() << std::endl;
 
