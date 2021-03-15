@@ -1,6 +1,6 @@
 /*=========================================================================
 
-  Program:   OpenIGTLink -- Example for Tracker Client Program
+  Program:   OpenIGTLink -- Example for Tracking Data Server
   Language:  C++
 
   Copyright (c) Insight Software Consortium. All rights reserved.
@@ -11,152 +11,320 @@
 
 =========================================================================*/
 
+
 #include <iostream>
 #include <math.h>
 #include <cstdlib>
 #include <cstring>
 
 #include "igtlOSUtil.h"
+#include "igtlMessageHeader.h"
+#include "igtlServerSocket.h"
 #include "igtlTrackingDataMessage.h"
-#include "igtlClientSocket.h"
+#include "igtlMultiThreader.h"
 
 
-int ReceiveTrackingData(igtl::ClientSocket::Pointer& socket, igtl::MessageHeader::Pointer& header);
+void* ThreadFunction(void* ptr);
+int   SendTrackingData(igtl::Socket::Pointer& socket, igtl::TrackingDataMessage::Pointer& trackingMsg);
+void  GetRandomTestMatrix(igtl::Matrix4x4& matrix, float phi, float theta);
+
+typedef struct {
+    int   nloop;
+    igtl::MutexLock::Pointer glock;
+    igtl::Socket::Pointer socket;
+    int   interval;
+    int   stop;
+} ThreadData;
+
 
 int main(int argc, char* argv[])
 {
+
     //------------------------------------------------------------
     // Parse Arguments
 
-    if (argc != 4) // check number of arguments
+    if (argc != 2) // check number of arguments
     {
         // If not correct, print usage
-        std::cerr << "Usage: " << argv[0] << " <hostname> <port> <fps>" << std::endl;
-        std::cerr << "    <hostname> : IP or host name" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <port>" << std::endl;
         std::cerr << "    <port>     : Port # (18944 in Slicer default)" << std::endl;
-        std::cerr << "    <fps>      : Frequency (fps) to send coordinate" << std::endl;
         exit(0);
     }
 
-    char* hostname = argv[1];
-    int    port = atoi(argv[2]);
-    double fps = atof(argv[3]);
-    int    interval = (int)(1000.0 / fps);
+    int    port = atoi(argv[1]);
 
-    //------------------------------------------------------------
-    // Establish Connection
+    igtl::ServerSocket::Pointer serverSocket;
+    serverSocket = igtl::ServerSocket::New();
+    int r = serverSocket->CreateServer(port);
 
-    igtl::ClientSocket::Pointer socket;
-    socket = igtl::ClientSocket::New();
-    int r = socket->ConnectToServer(hostname, port);
-
-    if (r != 0)
+    if (r < 0)
     {
-        std::cerr << "Cannot connect to the server." << std::endl;
+        std::cerr << "Cannot create a server socket." << std::endl;
         exit(0);
     }
 
-    //------------------------------------------------------------
-    // Ask the server to start pushing tracking data
-    std::cerr << "Sending STT_TDATA message....." << std::endl;
-    igtl::StartTrackingDataMessage::Pointer startTrackingMsg;
-    startTrackingMsg = igtl::StartTrackingDataMessage::New();
-    startTrackingMsg->SetDeviceName("TDataClient");
-    startTrackingMsg->SetResolution(interval);
-    startTrackingMsg->SetCoordinateName("Patient");
-    startTrackingMsg->Pack();
-    socket->Send(startTrackingMsg->GetPackPointer(), startTrackingMsg->GetPackSize());
-
-    int loop = 0;
+    igtl::MultiThreader::Pointer threader = igtl::MultiThreader::New();
+    igtl::MutexLock::Pointer glock = igtl::MutexLock::New();
+    ThreadData td;
 
     while (1)
     {
         //------------------------------------------------------------
-        // Wait for a reply
-        igtl::MessageHeader::Pointer headerMsg;
-        headerMsg = igtl::MessageHeader::New();
-        headerMsg->InitPack();
-        int rs = socket->Receive(headerMsg->GetPackPointer(), headerMsg->GetPackSize());
-        if (rs == 0)
-        {
-            std::cerr << "Connection closed." << std::endl;
-            socket->CloseSocket();
-            exit(0);
-        }
-        if (rs != headerMsg->GetPackSize())
-        {
-            std::cerr << "Message size information and actual data size don't match." << std::endl;
-            socket->CloseSocket();
-            exit(0);
-        }
+        // Waiting for Connection
+        int threadID = -1;
+        igtl::Socket::Pointer socket;
+        socket = serverSocket->WaitForConnection(1000);
 
-        headerMsg->Unpack();
-        if (strcmp(headerMsg->GetDeviceType(), "TDATA") == 0)
+        if (socket.IsNotNull()) // if client connected
         {
-            ReceiveTrackingData(socket, headerMsg);
-        }
-        else
-        {
-            std::cerr << "Receiving : " << headerMsg->GetDeviceType() << std::endl;
-            socket->Skip(headerMsg->GetBodySizeToRead(), 0);
-        }
-        if (++loop >= 10) // if received 100 times
-        {
+            std::cerr << "A client is connected." << std::endl;
+
+
+
+            // Create a message buffer to receive header
+            igtl::MessageHeader::Pointer headerMsg;
+            headerMsg = igtl::MessageHeader::New();
             //------------------------------------------------------------
-            // Ask the server to stop pushing tracking data
-            std::cerr << "Sending STP_TDATA message....." << std::endl;
-            igtl::StopTrackingDataMessage::Pointer stopTrackingMsg;
-            stopTrackingMsg = igtl::StopTrackingDataMessage::New();
-            stopTrackingMsg->SetDeviceName("TDataClient");
-            stopTrackingMsg->Pack();
-            socket->Send(stopTrackingMsg->GetPackPointer(), stopTrackingMsg->GetPackSize());
-            loop = 0;
+            // loop
+            for (;;)
+            {
+                // Initialize receive buffer
+                headerMsg->InitPack();
+
+                // Receive generic header from the socket
+                int rs = socket->Receive(headerMsg->GetPackPointer(), headerMsg->GetPackSize());
+                if (rs == 0)
+                {
+                    if (threadID >= 0)
+                    {
+                        td.stop = 1;
+                        threader->TerminateThread(threadID);
+                        threadID = -1;
+                    }
+                    std::cerr << "Disconnecting the client." << std::endl;
+                    td.socket = NULL;  // VERY IMPORTANT. Completely remove the instance.
+                    socket->CloseSocket();
+                    break;
+                }
+                if (rs != headerMsg->GetPackSize())
+                {
+                    continue;
+                }
+
+
+                //igtl::TrackingDataMessage::Pointer mytrackingMsg;
+                //mytrackingMsg = igtl::TrackingDataMessage::New();
+                //SendTrackingData(socket, mytrackingMsg);
+
+
+
+                // Deserialize the header
+                headerMsg->Unpack();
+
+                // Check data type and receive data body
+                if (strcmp(headerMsg->GetDeviceType(), "STT_TDATA") == 0)
+                {
+                    std::cerr << "Received a STT_TDATA message." << std::endl;
+
+                    igtl::StartTrackingDataMessage::Pointer startTracking;
+                    startTracking = igtl::StartTrackingDataMessage::New();
+                    startTracking->SetMessageHeader(headerMsg);
+                    startTracking->AllocatePack();
+
+                    int r2 = socket->Receive(startTracking->GetPackBodyPointer(), startTracking->GetPackBodySize());
+                    int c = startTracking->Unpack(1);
+                    if (c & igtl::MessageHeader::UNPACK_BODY) // if CRC check is OK
+                    {
+                        td.interval = startTracking->GetResolution();
+                        td.glock = glock;
+                        td.socket = socket;
+                        td.stop = 0;
+                        threadID = threader->SpawnThread((igtl::ThreadFunctionType)&ThreadFunction, &td);
+                    }
+                }
+                else if (strcmp(headerMsg->GetDeviceType(), "STP_TDATA") == 0)
+                {
+                    socket->Skip(headerMsg->GetBodySizeToRead(), 0);
+                    std::cerr << "Received a STP_TDATA message." << std::endl;
+                    if (threadID >= 0)
+                    {
+                        td.stop = 1;
+                        threader->TerminateThread(threadID);
+                        threadID = -1;
+                        std::cerr << "Disconnecting the client." << std::endl;
+                        td.socket = NULL;  // VERY IMPORTANT. Completely remove the instance.
+                        socket->CloseSocket();
+                    }
+                    break;
+                }
+                else
+                {
+                    std::cerr << "Receiving : " << headerMsg->GetDeviceType() << std::endl;
+                    socket->Skip(headerMsg->GetBodySizeToRead(), 0);
+
+
+
+                    //// TRY TO SEND TRACKING DATA
+                    //igtl::TrackingDataMessage::Pointer mytrackingMsg;
+                    //mytrackingMsg = igtl::TrackingDataMessage::New();
+                    //SendTrackingData(socket,mytrackingMsg);
+                }
+            }
         }
     }
+
+    //------------------------------------------------------------
+    // Close connection (The example code never reaches to this section ...)
+    serverSocket->CloseSocket();
+
 }
 
 
-int ReceiveTrackingData(igtl::ClientSocket::Pointer& socket, igtl::MessageHeader::Pointer& header)
+void* ThreadFunction(void* ptr)
 {
-    std::cerr << "Receiving TDATA data type." << std::endl;
+    //------------------------------------------------------------
+    // Get thread information
+    igtl::MultiThreader::ThreadInfo* info =
+        static_cast<igtl::MultiThreader::ThreadInfo*>(ptr);
+
+    //int id      = info->ThreadID;
+    //int nThread = info->NumberOfThreads;
+    ThreadData* td = static_cast<ThreadData*>(info->UserData);
+
+    //------------------------------------------------------------
+    // Get user data
+    igtl::MutexLock::Pointer glock = td->glock;
+    long interval = td->interval;
+    std::cerr << "Interval = " << interval << " (ms)" << std::endl;
+    //long interval = 1000;
+    //long interval = (id + 1) * 100; // (ms)
+
+    igtl::Socket::Pointer& socket = td->socket;
 
     //------------------------------------------------------------
     // Allocate TrackingData Message Class
+    //
+    // NOTE: TrackingDataElement class instances are allocated
+    //       before the loop starts to avoid reallocation
+    //       in each image transfer.
 
-    igtl::TrackingDataMessage::Pointer trackingData;
-    trackingData = igtl::TrackingDataMessage::New();
-    trackingData->SetMessageHeader(header);
-    trackingData->AllocatePack();
+    igtl::TrackingDataMessage::Pointer trackingMsg;
+    trackingMsg = igtl::TrackingDataMessage::New();
 
-    // Receive body from the socket
-    socket->Receive(trackingData->GetPackBodyPointer(), trackingData->GetPackBodySize());
 
-    // Deserialize the transform data
-    // If you want to skip CRC check, call Unpack() without argument.
-    int c = trackingData->Unpack(1);
+    igtl::TrackingDataElement::Pointer trackElement0;
+    trackElement0 = igtl::TrackingDataElement::New();
+    trackElement0->SetName("Channel 0");
+    trackElement0->SetType(igtl::TrackingDataElement::TYPE_TRACKER);
 
-    if (c & igtl::MessageHeader::UNPACK_BODY) // if CRC check is OK
+    igtl::TrackingDataElement::Pointer trackElement1;
+    trackElement1 = igtl::TrackingDataElement::New();
+    trackElement1->SetName("Channel 1");
+    trackElement1->SetType(igtl::TrackingDataElement::TYPE_6D);
+
+    igtl::TrackingDataElement::Pointer trackElement2;
+    trackElement2 = igtl::TrackingDataElement::New();
+    trackElement2->SetName("Channel 2");
+    trackElement2->SetType(igtl::TrackingDataElement::TYPE_5D);
+
+    trackingMsg->AddTrackingDataElement(trackElement0);
+    trackingMsg->AddTrackingDataElement(trackElement1);
+    trackingMsg->AddTrackingDataElement(trackElement2);
+
+    //------------------------------------------------------------
+    // Loop
+    while (!td->stop)
     {
-        int nElements = trackingData->GetNumberOfTrackingDataElements();
-        for (int i = 0; i < nElements; i++)
-        {
-            igtl::TrackingDataElement::Pointer trackingElement;
-            trackingData->GetTrackingDataElement(i, trackingElement);
-
-            igtl::Matrix4x4 matrix;
-            trackingElement->GetMatrix(matrix);
-
-
-            std::cerr << "========== Element #" << i << " ==========" << std::endl;
-            std::cerr << " Name       : " << trackingElement->GetName() << std::endl;
-            std::cerr << " Type       : " << (int)trackingElement->GetType() << std::endl;
-            std::cerr << " Matrix : " << std::endl;
-            igtl::PrintMatrix(matrix);
-            std::cerr << "================================" << std::endl;
-        }
-        return 1;
+        trackingMsg->SetDeviceName("Tracker");
+        glock->Lock();
+        SendTrackingData(socket, trackingMsg);
+        glock->Unlock();
+        igtl::Sleep(interval);
     }
+
+    //glock->Lock();
+    //std::cerr << "Thread #" << id << ": end." << std::endl;
+    //glock->Unlock();
+
+    return NULL;
+}
+
+
+int SendTrackingData(igtl::Socket::Pointer& socket, igtl::TrackingDataMessage::Pointer& trackingMsg)
+{
+
+    static float phi0 = 0.0;
+    static float theta0 = 0.0;
+    static float phi1 = 0.0;
+    static float theta1 = 0.0;
+    static float phi2 = 0.0;
+    static float theta2 = 0.0;
+
+    igtl::Matrix4x4 matrix;
+    igtl::TrackingDataElement::Pointer ptr;
+
+    // Channel 0
+    trackingMsg->GetTrackingDataElement(0, ptr);
+    GetRandomTestMatrix(matrix, phi0, theta0);
+    ptr->SetMatrix(matrix);
+
+    // Channel 1
+    trackingMsg->GetTrackingDataElement(1, ptr);
+    GetRandomTestMatrix(matrix, phi1, theta1);
+    ptr->SetMatrix(matrix);
+
+    // Channel 2
+    trackingMsg->GetTrackingDataElement(2, ptr);
+    GetRandomTestMatrix(matrix, phi2, theta2);
+    ptr->SetMatrix(matrix);
+
+    trackingMsg->Pack();
+    socket->Send(trackingMsg->GetPackPointer(), trackingMsg->GetPackSize());
+
+    phi0 += 0.1;
+    phi1 += 0.2;
+    phi2 += 0.3;
+    theta0 += 0.2;
+    theta1 += 0.1;
+    theta2 += 0.05;
+
     return 0;
 }
+
+
+
+//------------------------------------------------------------
+// Function to generate random matrix.
+void GetRandomTestMatrix(igtl::Matrix4x4& matrix, float phi, float theta)
+{
+    float position[3];
+    float orientation[4];
+
+    // random position
+    position[0] = 50.0 * cos(phi);
+    position[1] = 50.0 * sin(phi);
+    position[2] = 50.0 * cos(phi);
+    phi = phi + 0.2;
+
+    // random orientation
+    orientation[0] = 0.0;
+    orientation[1] = 0.6666666666 * cos(theta);
+    orientation[2] = 0.577350269189626;
+    orientation[3] = 0.6666666666 * sin(theta);
+    theta = theta + 0.1;
+
+    //igtl::Matrix4x4 matrix;
+    igtl::QuaternionToMatrix(orientation, matrix);
+
+    matrix[0][3] = position[0];
+    matrix[1][3] = position[1];
+    matrix[2][3] = position[2];
+
+    //igtl::PrintMatrix(matrix);
+}
+
+
+
+
 
 
