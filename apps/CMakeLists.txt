@@ -31,3 +31,9 @@ target_link_libraries(daq_class_test PRIVATE daq_class eigen )
 
 add_executable(server_test server_test.cpp)
 target_link_libraries(server_test PRIVATE eigen OpenIGTLink)
+
+add_executable(server_test2 server_test_2.cpp)
+target_link_libraries(server_test2 PRIVATE eigen OpenIGTLink)
+
+add_executable(server_test3 openigtlink_testbench.cpp)
+target_link_libraries(server_test3 PRIVATE eigen openigtlink_class)

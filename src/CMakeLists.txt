@@ -22,3 +22,5 @@ target_link_libraries(solver_class PRIVATE eigen coil_dim coil_spec sensor_objec
 add_library(daq_class STATIC daq_class.cpp daq_class.h)
 target_link_libraries(daq_class PRIVATE eigen daq)
 
+add_library(openigtlink_class STATIC OpenIGTLink_class.cpp OpenIGTLink_class.h)
+target_link_libraries(openigtlink_class PRIVATE eigen openigtlink OpenIGTLink)
