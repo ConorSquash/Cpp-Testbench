@@ -36,4 +36,4 @@ add_executable(server_test2 server_test_2.cpp)
 target_link_libraries(server_test2 PRIVATE eigen OpenIGTLink)
 
 add_executable(server_test3 openigtlink_testbench.cpp)
-target_link_libraries(server_test3 PRIVATE eigen openigtlink_class)
+target_link_libraries(server_test3 PRIVATE eigen OpenIGTLink openigtlink_class)

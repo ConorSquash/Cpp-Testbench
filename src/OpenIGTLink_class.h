@@ -2,6 +2,10 @@
 #define OPENIGTLINK_CLASS_H
 
 
+#include "igtlOSUtil.h"
+#include "igtlTransformMessage.h"
+#include "igtlServerSocket.h"
+
 using namespace std;
 
 
