@@ -1,0 +1,3 @@
+[submodule "extern/openigtlink/OpenIGTLink"]
+	path = extern/openigtlink/OpenIGTLink
+	url = https://github.com/openigtlink/OpenIGTLink
