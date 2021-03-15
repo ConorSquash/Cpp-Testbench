@@ -31,7 +31,7 @@ private:
 
 public:
 
-    OpenIGTLink(int argc, char* argv[]);
+    OpenIGTLink(int port, float fps);
 
 	void GetRandomTestMatrix(igtl::Matrix4x4& matrix);
 

@@ -22,10 +22,10 @@
 
 
 
-OpenIGTLink::OpenIGTLink(int argc, char* argv[])
+OpenIGTLink::OpenIGTLink(int port, float fps)
 {
-    port = atoi(argv[1]);
-    fps = atof(argv[2]);
+    //port = atoi(argv[1]);
+    //fps = atof(argv[2]);
     interval = (int)(1000.0 / fps);
 
 
