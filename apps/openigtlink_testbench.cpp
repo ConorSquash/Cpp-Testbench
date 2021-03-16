@@ -19,7 +19,7 @@ int main() {
 
 	OpenIGTLink my_server(port, fps);
 
-	vector <double> PandO = { 20, 45, 20, M_PI_2, M_PI_2 };
+	vector <double> PandO = { .2, .45, .20, M_PI_2, M_PI_2 };
 
 	my_server.SendMessage(PandO);
 

@@ -130,9 +130,9 @@ void OpenIGTLink::CreateMatrix(vector <double> pando)
     m_matrix[3][2] = 0;
 
     // Fourth column
-    m_matrix[0][3] = pando[0];
-    m_matrix[1][3] = pando[1];
-    m_matrix[2][3] = pando[2];
+    m_matrix[0][3] = pando[0] * 100;
+    m_matrix[1][3] = pando[1] * 100;
+    m_matrix[2][3] = pando[2] * 100;
     m_matrix[3][3] = 1;
 
     igtl::PrintMatrix(m_matrix);
