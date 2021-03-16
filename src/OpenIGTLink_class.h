@@ -15,8 +15,8 @@ class OpenIGTLink
 {
 private:
 
-    int    port;
-    double fps;
+    int    m_port;
+    double m_fps;
     int    interval;
 
     igtl::TransformMessage::Pointer transMsg;
@@ -28,12 +28,27 @@ private:
 
     igtl::Matrix4x4 matrix;
 
+    float m_position[3];
+    float m_orientation[4];
+
+    igtl::Matrix4x4 m_matrix;
+
+    void GetRandomTestMatrix(igtl::Matrix4x4& matrix);
+
+    void OpenIGTLink::CreateMatrix(vector <double> pando);
+
+
 
 public:
 
     OpenIGTLink(int port, float fps);
 
-	void GetRandomTestMatrix(igtl::Matrix4x4& matrix);
+
+
+    void SendMessage(vector<double> pando);
+
+
+    //int CloseSocket();
 
 
 };

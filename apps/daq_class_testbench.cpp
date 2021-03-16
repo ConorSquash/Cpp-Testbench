@@ -3,27 +3,28 @@
 //#include "daq_class.h"
 #include "../src/daq_class.h"
 
+#include <Dense>
 
+
+using Eigen::MatrixXd;
 
 using namespace std;
 
 
 int main() {
 
-	//SAMPLE
 
-	double Fs, samples;
-	DAQ my_channel(Fs, samples);
-	
-	
 	double Fs = 100e3;
-	//double Ts = 1 / Fs;
 	int numSamps = 1000;
-	//int chans = 1;
 
-	my_channel.DemodSetup(Fs,numSamps);
+	// Sets up the DAQ to sample channel 1 at Fs and fills a buffer of numSamps samples
+	DAQ my_channel(Fs, numSamps);
+	
+	MatrixXd my_samples;
 
-	my_channel.AcquireSamples(Fs,numSamps);   // Creates and fills a buffer of numSamps samples within the DAQ
+	my_samples = my_channel.ReadSamples();
+
+	//cout << "Sample 1 : " << my_samples(0,0) << endl;
 
 
 	

@@ -1,5 +1,7 @@
 
 #include <iostream>
+#define _USE_MATH_DEFINES
+#include "math.h"
 
 #include "OpenIGTLink_class.h"
 
@@ -17,7 +19,15 @@ int main() {
 
 	OpenIGTLink my_server(port, fps);
 
-	cout << "test!" << endl;
+	vector <double> PandO = { 20, 45, 20, M_PI_2, M_PI_2 };
+
+	my_server.SendMessage(PandO);
+
+	//my_server.CloseSocket();
+
+	cout << "test" << endl;
+
+	getchar();
 
 
 	return 0;

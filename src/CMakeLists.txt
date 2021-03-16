@@ -20,6 +20,8 @@ add_library(solver_class STATIC solver_class.cpp solver_class.h)
 target_link_libraries(solver_class PRIVATE eigen coil_dim coil_spec sensor_objective field_calc lsq)
 
 add_library(daq_class STATIC daq_class.cpp daq_class.h)
+target_include_directories(daq_class PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(daq_class PUBLIC ${CMAKE_SOURCE_DIR}/extern/nidaq/include)
 target_link_libraries(daq_class PRIVATE eigen daq)
 
 add_library(openigtlink_class STATIC OpenIGTLink_class.cpp OpenIGTLink_class.h)

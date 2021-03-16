@@ -11,16 +11,7 @@
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 
-using Eigen::MatrixXcd;
-using Eigen::VectorXcd;
-
-using Eigen::MatrixXcf;
-using Eigen::VectorXcf;
-
-using Eigen::VectorXd;
-
 using namespace std;
-
 
 
 // DAQ Functions and variables
@@ -31,24 +22,79 @@ float64     buff_data[5000];
 MatrixXf    buffer_result;
 MatrixXd   buffer_result_d;
 
-MatrixXd  my_result;
-
-int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
-int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
-
 MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan);
-VectorXcd demodulate(double samples);
 
 
-// Demodulation Variables
+DAQ::DAQ(double Fs, double samples) 
+{
+	// Setup code
+	cout << "DAQ sampling at " << Fs << " Hz" << endl;
 
-VectorXcd result(8), magnitude(8);
-VectorXcd my_peaks(8);
-MatrixXcd E;
+	m_samples = samples;
+
+	error = 0;
+	taskHandle = 0;
+	read = 0;
+	errBuff[2048] = { '\0' };
+
+	m_num_of_channels_used = 1;
+	m_samps_per_chan = samples;
+
+	buffer_result.resize(samples, 1);
 
 
+	// DAQmx analog voltage channel and timing parameters
+
+	DAQmxErrChk(DAQmxCreateTask("", &taskHandle));
+
+	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, "Dev1/ai1", "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
+
+	DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
+
+	// DAQmx Start Code
+	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
 
+Error:
+	if (DAQmxFailed(error))
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+	if (taskHandle != 0) 
+	{
+		DAQmxStopTask(taskHandle);
+		DAQmxClearTask(taskHandle);
+	}
+	if (DAQmxFailed(error))
+		printf("DAQmx Error: %s\n", errBuff);
+}
+
+
+MatrixXd DAQ::ReadSamples()
+{
+	//int samples = 1000;
+
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
+	
+	cout << buff_data[0] << endl;
+
+	// Extract buffer into Eigen Matrix
+	//my_result = read_data_buffer(1, m_samples);
+
+	return my_result;
+
+Error:
+	if (DAQmxFailed(error))
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+	if (taskHandle != 0) 
+	{
+		DAQmxStopTask(taskHandle);
+		DAQmxClearTask(taskHandle);
+	}
+	if (DAQmxFailed(error))
+		printf("DAQmx Error: %s\n", errBuff);
+
+}
+
+/*
 
 int DAQ::AcquireSamples(double Fs, double samples) 
 {
@@ -82,7 +128,7 @@ int DAQ::AcquireSamples(double Fs, double samples)
 	// Extract buffer into Eigen Matrix
 	my_result = read_data_buffer(1,samples);
 
-	my_peaks = demodulate(samples);
+	//my_peaks = demodulate(samples);
 
 	// Stop and clear task
 
@@ -107,7 +153,10 @@ Error:
 	return 0;
 
 }
+*/
 
+
+/*
 int DAQ::DemodSetup(double frequency, double samples)
 {
 
@@ -144,6 +193,7 @@ int DAQ::DemodSetup(double frequency, double samples)
 								// Same as E = E.transpose().eval();
 	return 0;
 }
+*/
 
 
 
@@ -157,13 +207,12 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan) {
 		for (int i = 0; i < samps_per_chan; i++)
 			buffer_result(i, j) = buff_data[i + (j * samps_per_chan)];
 
-	buffer_result_d = buffer_result.cast<double>();      // Need to cast to double when demodulating later
+
+	// Need to cast to double when demodulating later
+
+	buffer_result_d = buffer_result.cast<double>();      
 
 	cout << "\tFirst result in column 1 = " << buffer_result_d(0, 0) << endl;
-	//"\t" <<    // Print the fifth result
-	//"First result in column 2 = " << buffer_result(0, 1) << endl;    // Print the fifth result
-
-
 
 	return buffer_result_d;
 }
@@ -171,6 +220,7 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan) {
 
 
 
+/*
 
 VectorXcd demodulate(double numSamples) {
 
@@ -198,4 +248,5 @@ VectorXcd demodulate(double numSamples) {
 
 	return magnitude;
 }
+*/
 
