@@ -20,9 +20,9 @@ int main() {
 	// Sets up the DAQ to sample channel 1 at Fs and fills a buffer of numSamps samples
 	DAQ my_channel(Fs, numSamps);
 	
-	MatrixXd my_samples;
+	//MatrixXd my_samples;
 
-	my_samples = my_channel.ReadSamples();
+	my_channel.ReadSamples();
 
 	//cout << "Sample 1 : " << my_samples(0,0) << endl;
 

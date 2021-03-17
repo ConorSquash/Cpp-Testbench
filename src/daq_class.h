@@ -20,8 +20,10 @@ private:
 	int32       error;
 	TaskHandle  taskHandle;
 	int32       read;
-	float64     data[1000];
-	char        errBuff[2048];
+	//float64     data[1000];
+	char        errBuff[2048] = { '\0' };
+	float64     buff_data[5000];
+
 
 	MatrixXd  my_result;
 
@@ -47,7 +49,7 @@ public:
 	//int DemodSetup(double frequency, double samples);
 
 
-	MatrixXd ReadSamples();
+	int ReadSamples();
 
 
 };

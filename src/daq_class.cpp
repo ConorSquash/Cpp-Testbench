@@ -18,7 +18,7 @@ using namespace std;
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
 //float64     data[1000];
-float64     buff_data[5000];
+//float64     buff_data[5000];
 MatrixXf    buffer_result;
 MatrixXd   buffer_result_d;
 
@@ -35,7 +35,7 @@ DAQ::DAQ(double Fs, double samples)
 	error = 0;
 	taskHandle = 0;
 	read = 0;
-	errBuff[2048] = { '\0' };
+	//errBuff[2048] = { '\0' };
 
 	m_num_of_channels_used = 1;
 	m_samps_per_chan = samples;
@@ -54,6 +54,9 @@ DAQ::DAQ(double Fs, double samples)
 	// DAQmx Start Code
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
+	//DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
+
+
 
 Error:
 	if (DAQmxFailed(error))
@@ -68,10 +71,10 @@ Error:
 }
 
 
-MatrixXd DAQ::ReadSamples()
+int DAQ::ReadSamples()
 {
 	//int samples = 1000;
-
+	
 	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
 	
 	cout << buff_data[0] << endl;
@@ -79,7 +82,7 @@ MatrixXd DAQ::ReadSamples()
 	// Extract buffer into Eigen Matrix
 	//my_result = read_data_buffer(1, m_samples);
 
-	return my_result;
+	return 0;
 
 Error:
 	if (DAQmxFailed(error))
@@ -197,7 +200,7 @@ int DAQ::DemodSetup(double frequency, double samples)
 
 
 
-
+/*
 
 MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan) {
 
@@ -216,6 +219,8 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan) {
 
 	return buffer_result_d;
 }
+*/
+
 
 
 
