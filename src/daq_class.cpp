@@ -54,7 +54,7 @@ DAQ::DAQ(double Fs, double samples)
 	// DAQmx Start Code
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
-	//DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
+	cout << "DAQmxStartTask called" << endl;
 
 
 
@@ -77,7 +77,9 @@ int DAQ::ReadSamples()
 	
 	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
 	
-	cout << buff_data[0] << endl;
+	cout << "In ReadSamples()" << endl;
+
+	//cout << buff_data[0] << endl;
 
 	// Extract buffer into Eigen Matrix
 	//my_result = read_data_buffer(1, m_samples);
