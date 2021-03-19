@@ -18,11 +18,13 @@ using namespace std;
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
 //float64     data[1000];
-//float64     buff_data[5000];
+
+
+float64     buff_data[5000];
 MatrixXf    buffer_result;
 MatrixXd   buffer_result_d;
 
-MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan);
+MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]);
 
 
 DAQ::DAQ(double Fs, double samples) 
@@ -54,157 +56,49 @@ DAQ::DAQ(double Fs, double samples)
 	// DAQmx Start Code
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
-	cout << "DAQmxStartTask called" << endl;
 
 
 
 Error:
-	if (DAQmxFailed(error))
+	if (DAQmxFailed(error)) {
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
-	if (taskHandle != 0) 
-	{
+
+		// DAQmx Stop Code
+
 		DAQmxStopTask(taskHandle);
 		DAQmxClearTask(taskHandle);
-	}
-	if (DAQmxFailed(error))
 		printf("DAQmx Error: %s\n", errBuff);
+	}
 }
 
 
 int DAQ::ReadSamples()
 {
-	//int samples = 1000;
-	
 	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
-	
-	cout << "In ReadSamples()" << endl;
-
-	//cout << buff_data[0] << endl;
 
 	// Extract buffer into Eigen Matrix
-	//my_result = read_data_buffer(1, m_samples);
+	my_result = read_data_buffer(1, m_samples, buff_data);
 
 	return 0;
 
 Error:
-	if (DAQmxFailed(error))
-		DAQmxGetExtendedErrorInfo(errBuff, 2048);
-	if (taskHandle != 0) 
-	{
-		DAQmxStopTask(taskHandle);
-		DAQmxClearTask(taskHandle);
-	}
-	if (DAQmxFailed(error))
-		printf("DAQmx Error: %s\n", errBuff);
-
-}
-
-/*
-
-int DAQ::AcquireSamples(double Fs, double samples) 
-{
-
-	// This function acquires a finite number of samples
-	// and sorts them into an eigen matrix
-	cout << "\n -> ACQUIRING " <<  samples << " SAMPLES" << endl;
-
-	buffer_result.resize(samples, 1);
-
-	int32       error = 0;
-	TaskHandle  taskHandle = 0;
-	int32       read;
-	float64     data[1000];
-	char        errBuff[2048] = { '\0' };
-
-	// DAQmx analog voltage channel and timing parameters
-
-	DAQmxErrChk(DAQmxCreateTask("", &taskHandle));
-
-	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, "Dev1/ai1", "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
-
-	DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
-
-	// DAQmx Start Code
-	DAQmxErrChk(DAQmxStartTask(taskHandle));
-
-	// DAQmx Read Code
-	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
-
-	// Extract buffer into Eigen Matrix
-	my_result = read_data_buffer(1,samples);
-
-	//my_peaks = demodulate(samples);
-
-	// Stop and clear task
-
-
-
-Error:
-
-	if (DAQmxFailed(error))
+	if (DAQmxFailed(error)) {
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
 
-	if (taskHandle != 0) {
+		// DAQmx Stop Code
 
 		DAQmxStopTask(taskHandle);
-
 		DAQmxClearTask(taskHandle);
-
+		printf("DAQmx Error: %s\n", errBuff);
 	}
 
-	if (DAQmxFailed(error))
-		printf("DAQmx Error: %s\n", errBuff);
-
-	return 0;
-
 }
-*/
 
 
-/*
-int DAQ::DemodSetup(double frequency, double samples)
+
+
+MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]) 
 {
-
-	cout << "\n -> SETTING DEMOD PARMS " << endl;
-
-	// Specify the sampling frequency per sensor channel
-	double Fs = frequency;
-	double Ts = 1 / Fs;
-	int numSamples = samples;
-
-
-	// Specify the number of time samples, must be the same as the length of X
-
-	VectorXd t(numSamples);
-
-	for (int i = 0; i < numSamples; i++)
-		t(i) = (i * Ts);
-
-	// Define the transmission frequencies of the emitter coil
-	// These will be used for demodulation
-
-	VectorXd F(8);
-
-	F << 2500, 4860, 8500, 11020, 12500, 17888, 20000, 30000;
-
-	E.resize(8, numSamples);   // Matrix of complex doubles
-
-	// Define the demodulation matrix for the asynchronous demodulation scheme
-
-	for (int j = 0; j < 8; j++)
-		E.row(j) = exp(2 * M_PI * F(j) * 1i * t.array());
-
-	E.transposeInPlace();		// Must transpose in place when replacing with a transpose of itself!!! 
-								// Same as E = E.transpose().eval();
-	return 0;
-}
-*/
-
-
-
-/*
-
-MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan) {
 
 	// Sorts the buffer into columns in an eigen matrix
 
@@ -214,14 +108,11 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan) {
 
 
 	// Need to cast to double when demodulating later
-
 	buffer_result_d = buffer_result.cast<double>();      
-
-	cout << "\tFirst result in column 1 = " << buffer_result_d(0, 0) << endl;
 
 	return buffer_result_d;
 }
-*/
+
 
 
 

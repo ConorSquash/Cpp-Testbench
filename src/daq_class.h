@@ -15,8 +15,6 @@ class DAQ
 {
 private:
 
-
-
 	int32       error;
 	TaskHandle  taskHandle;
 	int32       read;
@@ -24,15 +22,10 @@ private:
 	char        errBuff[2048] = { '\0' };
 	float64     buff_data[5000];
 
-
-	MatrixXd  my_result;
-
 	double m_samples;
 
-	int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
-	int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
-
-	//VectorXcd demodulate(double samples);
+	//int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
+	//int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
 
 	double m_samps_per_chan;
 	double m_num_of_channels_used;
@@ -41,13 +34,9 @@ private:
 
 public:
 
+	MatrixXd  my_result;
 
 	DAQ(double Fs, double samples);
-	
-
-	//int AcquireSamples(double Fs, double samples);
-	//int DemodSetup(double frequency, double samples);
-
 
 	int ReadSamples();
 

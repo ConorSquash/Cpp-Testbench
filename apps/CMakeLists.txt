@@ -27,7 +27,7 @@ file(COPY yOriented-25cm.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY zOriented-10cm.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(daq_class_test daq_class_testbench.cpp)
-target_link_libraries(daq_class_test PRIVATE daq_class eigen )
+target_link_libraries(daq_class_test PRIVATE daq_class eigen demodulation_class )
 
 add_executable(server_test server_test.cpp)
 target_link_libraries(server_test PRIVATE eigen OpenIGTLink)
@@ -37,3 +37,6 @@ target_link_libraries(server_test2 PRIVATE eigen OpenIGTLink)
 
 add_executable(server_test3 openigtlink_testbench.cpp)
 target_link_libraries(server_test3 PRIVATE eigen OpenIGTLink openigtlink_class)
+
+add_executable(system_test system_test.cpp)
+target_link_libraries(system_test PRIVATE eigen OpenIGTLink openigtlink_class daq_class solver_class demodulation_class)

@@ -2,6 +2,8 @@
 #include <string>
 //#include "daq_class.h"
 #include "../src/daq_class.h"
+#include "demodulation_class.h"
+
 
 #include <Dense>
 
@@ -13,23 +15,49 @@ using namespace std;
 
 int main() {
 
+	// ====== SETUP ======
 
 	double Fs = 100e3;
 	int numSamps = 1000;
 
 	// Sets up the DAQ to sample channel 1 at Fs and fills a buffer of numSamps samples
 	DAQ my_channel(Fs, numSamps);
+
+	// Sets up demodulation parameters
+	Demod filter(Fs, numSamps);
 	
-	//MatrixXd my_samples;
+
+
+	// ====== LOOP ======
+
+
+	// Reads the DAQ buffer into an Eigen matrix (variable my_result)
+	// then demodulating this data
 
 	my_channel.ReadSamples();
-
-	//cout << "Sample 1 : " << my_samples(0,0) << endl;
-
-
-	
+	filter.demodulate(numSamps, my_channel.my_result);
+	cout << filter.magnitude << endl;
 
 	getchar();
+
+	my_channel.ReadSamples();
+	filter.demodulate(numSamps, my_channel.my_result);
+	cout << filter.magnitude << endl;
+
+	//my_channel.ReadSamples();
+
+	//for (int i = 0; i < 9; i++)
+	//{
+	//	my_channel.ReadSamples();
+	//	filter.demodulate(numSamps, my_channel.my_result);
+
+	//	cout << filter.magnitude << endl;
+
+	//}
+
+	getchar();
+
+	return 0;
 
 
 }
