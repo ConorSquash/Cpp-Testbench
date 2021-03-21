@@ -54,7 +54,7 @@ DAQ::DAQ(double Fs, double samples)
 	DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
 
 	// DAQmx Start Code
-	DAQmxErrChk(DAQmxStartTask(taskHandle));
+	//DAQmxErrChk(DAQmxStartTask(taskHandle));
 
 
 
@@ -74,10 +74,14 @@ Error:
 
 int DAQ::ReadSamples()
 {
+	DAQmxErrChk(DAQmxStartTask(taskHandle));
+
 	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
 
 	// Extract buffer into Eigen Matrix
 	my_result = read_data_buffer(1, m_samples, buff_data);
+
+	DAQmxErrChk(DAQmxStopTask(taskHandle));
 
 	return 0;
 

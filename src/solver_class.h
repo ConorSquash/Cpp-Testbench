@@ -3,6 +3,10 @@
 
 #include <vector>
 
+#include <Dense>
+using Eigen::VectorXd;
+
+
 
 using namespace std;
 
@@ -11,6 +15,10 @@ using namespace std;
 class Solver
 {
 private:
+
+	std::vector <double> PandO;    // Convert from eigen to standard C++ vector
+	int iterations;
+	VectorXd initialGuess;
 
 public:
 	

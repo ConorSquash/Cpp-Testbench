@@ -64,8 +64,10 @@ int Demod::demodulate(double numSamples, MatrixXd buffer_result_d) {
 	// The first column is the sampled data of the first channel
 	result = buffer_result_d.col(0).transpose() * demod_matrix;     
 
-	magnitude = (2 * result.array().abs()) / numSamples;
+	magnitude_c = (2 * result.array().abs()) / numSamples;
 
+	for (int i = 0; i < 8; i++)
+		magnitude_r.push_back(magnitude_c.real()(i));
 
 	return 0;
 }

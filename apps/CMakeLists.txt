@@ -18,7 +18,7 @@ target_link_libraries(cpp_daq_and_dft PRIVATE eigen daq)
 
 
 add_executable(solver_class_test solver_class_testbench.cpp )
-target_link_libraries(solver_class_test PRIVATE   solver_class coil_dim coil_spec sensor_objective field_calc lsq)
+target_link_libraries(solver_class_test PRIVATE   solver_class coil_dim coil_spec sensor_objective field_calc lsq eigen)
 
 file(COPY simulated_data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY simulated_data_w_noise.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

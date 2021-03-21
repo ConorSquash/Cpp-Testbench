@@ -59,8 +59,6 @@ struct MySolver
 
 		VectorXd out_vector(8);        // A vector to get the result of FluxModel - FluxReal
 
-		//vector<vector<double>> calibration = { {1},{1},{1},{1},{1},{1},{1},{1} };    // Create vector of calibration values (column)
-
 		sensor_objective_function(currentPandO, sensor_flux, X_Matrix, Y_Matrix, Z_Matrix, K, out_vector);
 
 		fval = out_vector;
@@ -190,7 +188,7 @@ int Solver::Setup()
 
 	cout << "\n -> COILS MODELLED" << endl;
 
-
+	return 0;
 
 }
 
@@ -201,7 +199,7 @@ lsq::LevenbergMarquardt <double, MySolver> optimizer;
 int Solver::ConfigureSolver() 
 {
 	
-	optimizer.setMaxIterations(1000);
+	optimizer.setMaxIterations(50);
 
 	optimizer.setMaxIterationsLM(1000);
 
@@ -261,12 +259,13 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	// The simulated sensor calibration contant is passed to the objective function
 	// Objective function is called in Struct 'MySolver' at the top of the program
 
-	VectorXd initialGuess(5);
-	initialGuess << initial_condition[0], 
-					initial_condition[1], 
-					initial_condition[2], 
-					initial_condition[3], 
-					initial_condition[4];
+	initialGuess.resize(5);
+
+	initialGuess(0) = initial_condition[0];
+	initialGuess(1) = initial_condition[1];
+	initialGuess(2) = initial_condition[2];
+	initialGuess(3) = initial_condition[3];
+	initialGuess(4) = initial_condition[4];
 
 	//cout << "\n -> SOLVING FOR INITIAL GUESS" << endl;
 	//cout << " x : " << initialGuess(0) << endl;
@@ -275,7 +274,7 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	//cout << " Pitch : " << initialGuess(3) << endl;
 	//cout << " Yaw : " << initialGuess(4) << endl;
 
-	int iterations = 0;
+	iterations = 0;
 
 	for (int i = 0; i < 8; i++)
 		sensor_flux(i) = amplitudes[i];
@@ -298,25 +297,10 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	*/
 
-	vector <double> PandO;    // Convert from eigen to standard C++ vector
+	//vector <double> PandO;    // Convert from eigen to standard C++ vector
 
 
-	/*
-	for (int i = 0; i < 3; i++)                     // RETURN X,Y,Z IN CM
-		PandO.push_back(result.xval(i) * 100);
 
-	for (int i = 3; i < 5; i++)
-		PandO.push_back(result.xval(i) * (180 / M_PI));    // Convert to degrees
-
-	PandO[3] = 180 - wrapMax(PandO[3],180);     // Wrap theta from 0 - 180 degrees
-	PandO[4] = wrapMax(abs(PandO[4]), 360);     // Wrap phi to 0 - 360 degrees
-
-	if (PandO[2] < 0)               // If z is negative, take positive value of z and mirror theta
-	{
-		PandO[2] = abs(PandO[2]);
-		PandO[3] = 180 - PandO[3];
-	}
-	*/
 
 	for (int i = 0; i < 5; i++)                // Return x,y,z in metres and theta/phi in radians
 		PandO.push_back(result.xval(i));

@@ -33,8 +33,6 @@ private:
 
     igtl::Matrix4x4 m_matrix;
 
-    void GetRandomTestMatrix(igtl::Matrix4x4& matrix);
-
     void OpenIGTLink::CreateMatrix(vector <double> pando);
 
 
@@ -43,12 +41,7 @@ public:
 
     OpenIGTLink(int port, float fps);
 
-
-
     void SendMessage(vector<double> pando);
-
-
-    //int CloseSocket();
 
 
 };

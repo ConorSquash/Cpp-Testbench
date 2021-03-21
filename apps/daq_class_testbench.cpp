@@ -34,26 +34,15 @@ int main() {
 	// Reads the DAQ buffer into an Eigen matrix (variable my_result)
 	// then demodulating this data
 
-	my_channel.ReadSamples();
-	filter.demodulate(numSamps, my_channel.my_result);
-	cout << filter.magnitude << endl;
 
-	getchar();
+	for (int i = 0; i < 9; i++)
+	{
+		my_channel.ReadSamples();
+		filter.demodulate(numSamps, my_channel.my_result);
 
-	my_channel.ReadSamples();
-	filter.demodulate(numSamps, my_channel.my_result);
-	cout << filter.magnitude << endl;
+		cout << filter.magnitude << endl;
 
-	//my_channel.ReadSamples();
-
-	//for (int i = 0; i < 9; i++)
-	//{
-	//	my_channel.ReadSamples();
-	//	filter.demodulate(numSamps, my_channel.my_result);
-
-	//	cout << filter.magnitude << endl;
-
-	//}
+	}
 
 	getchar();
 
