@@ -94,7 +94,7 @@ void OpenIGTLink::CreateMatrix(vector <double> pando)
     m_matrix[2][3] = pando[2] * 100;
     m_matrix[3][3] = 1;
 
-    igtl::PrintMatrix(m_matrix);
+    //igtl::PrintMatrix(m_matrix);
 
 }
 

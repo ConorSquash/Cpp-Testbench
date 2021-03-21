@@ -78,7 +78,7 @@ int main() {
 		//for (int i = 0; i < 8; i++)
 			//cout << filter.magnitude_r[i] << endl;
 
-		// Pass initial guess and sensor flux and then solve
+		// Initial condition here is previously solved point
 		PandO = my_sensor.Solve(filter.magnitude_r, PandO);
 
 		cout << PandO[0] << " " << PandO[1] << " " << PandO[2] << " "

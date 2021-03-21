@@ -24,10 +24,15 @@ float64     buff_data[5000];
 MatrixXf    buffer_result;
 MatrixXd   buffer_result_d;
 
+int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
+int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
+
 MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]);
 
+MatrixXd continuous_result;
 
-DAQ::DAQ(double Fs, double samples) 
+
+DAQ::DAQ(double Fs, double samples, bool is_finite) 
 {
 	// Setup code
 	cout << "DAQ sampling at " << Fs << " Hz" << endl;
@@ -51,11 +56,10 @@ DAQ::DAQ(double Fs, double samples)
 
 	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, "Dev1/ai1", "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
 
-	DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
-
-	// DAQmx Start Code
-	//DAQmxErrChk(DAQmxStartTask(taskHandle));
-
+	if (is_finite) 
+		DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
+	else
+		DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_ContSamps, samples));
 
 
 
@@ -98,7 +102,28 @@ Error:
 
 }
 
+int DAQ::ContinuousSamples()
+{
 
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(taskHandle, DAQmx_Val_Acquired_Into_Buffer, m_samples, 0, EveryNCallback, NULL));
+	
+	DAQmxErrChk(DAQmxStartTask(taskHandle));
+
+
+	return 0;
+
+Error:
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+
+		// DAQmx Stop Code
+
+		DAQmxStopTask(taskHandle);
+		DAQmxClearTask(taskHandle);
+		printf("DAQmx Error: %s\n", errBuff);
+	}
+
+}
 
 
 MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]) 
@@ -119,36 +144,50 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 
 
 
 
+int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData)
+{
+	int32       error = 0;
+	char        errBuff[2048] = { '\0' };
+	static int  totalRead = 0;
+	int32       read = 0;
+	//float64     data[1000];
 
+	// DAQmx Read Code
 
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, nSamples, 10.0, DAQmx_Val_GroupByChannel, buff_data, nSamples, &read, NULL));
 
-/*
+	//continuous_result = read_data_buffer(1, nSamples, buff_data);
 
-VectorXcd demodulate(double numSamples) {
+	cout << buff_data[0] << endl;
 
-	// This function takes the sampled data and demodulates it
+Error:
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
 
-
-
-	// The Eigen library gives out if you use the matrix of floats for the line result = ..
-	// but you must use a buffer of floats with DAQmxReadAnalogF64 --> cast to a double below
-
-
-	buffer_result_d = buffer_result.cast<double>();
-
-	result = buffer_result_d.col(0).transpose() * E;     // The first column is the sampled data of the first channel
-
-	//cout << "\n\n\n Printing result " << endl << result << endl;
-
-	magnitude = (2 * result.array().abs()) / numSamples;
-
-
-	cout << "\n\n\n\n Magnitude of each frequency component : " << endl;
-	cout << magnitude << endl;
-
-
-
-	return magnitude;
+		// DAQmx Stop Code
+		DAQmxStopTask(taskHandle);
+		DAQmxClearTask(taskHandle);
+		printf("DAQmx Error: %s\n", errBuff);
+	}
+	return 0;
 }
-*/
+
+
+
+int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData)
+{
+	int32   error = 0;
+	char    errBuff[2048] = { '\0' };
+
+	// Check to see if an error stopped the task.
+	DAQmxErrChk(status);
+
+Error:
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+		DAQmxClearTask(taskHandle);
+		printf("DAQmx Error: %s\n", errBuff);
+	}
+	return 0;
+}
 

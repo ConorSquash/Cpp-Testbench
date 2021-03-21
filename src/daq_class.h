@@ -36,10 +36,11 @@ public:
 
 	MatrixXd  my_result;
 
-	DAQ(double Fs, double samples);
+	DAQ(double Fs, double samples, bool is_finite);
 
 	int ReadSamples();
 
+	int ContinuousSamples();
 
 };
 

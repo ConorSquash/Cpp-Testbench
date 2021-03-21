@@ -42,8 +42,6 @@ MatrixXd Y_Matrix(8, 102);
 MatrixXd Z_Matrix(8, 102);
 
 
-// Create vector of calibration values (default row of 1s if not set)
-//vector<double> calibration = { 1,1,1,1,1,1,1,1 };
 VectorXd K(8);
 
 struct MySolver
@@ -239,8 +237,6 @@ int Solver::ConfigureSolver()
 
 int Solver::SetCalibration(vector <double> k)
 {
-	// Convert cpp vector to eigen vector
-
 
 
 	for (int i = 0; i < K.size(); i++)
@@ -278,7 +274,6 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	for (int i = 0; i < 8; i++)
 		sensor_flux(i) = amplitudes[i];
-	
 
 	// Start the optimization.
 	auto result = optimizer.minimize(initialGuess);
@@ -294,11 +289,7 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	 //do something with final function value
 	//cout << "Final xval: " << result.xval.transpose() << std::endl;
 
-
 	*/
-
-	//vector <double> PandO;    // Convert from eigen to standard C++ vector
-
 
 
 

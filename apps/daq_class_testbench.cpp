@@ -21,10 +21,12 @@ int main() {
 	int numSamps = 1000;
 
 	// Sets up the DAQ to sample channel 1 at Fs and fills a buffer of numSamps samples
-	DAQ my_channel(Fs, numSamps);
+	DAQ my_channel(Fs, numSamps,FALSE);
+
+	my_channel.ContinuousSamples();
 
 	// Sets up demodulation parameters
-	Demod filter(Fs, numSamps);
+	//Demod filter(Fs, numSamps);
 	
 
 
@@ -32,17 +34,15 @@ int main() {
 
 
 	// Reads the DAQ buffer into an Eigen matrix (variable my_result)
-	// then demodulating this data
 
 
-	for (int i = 0; i < 9; i++)
-	{
-		my_channel.ReadSamples();
-		filter.demodulate(numSamps, my_channel.my_result);
 
-		cout << filter.magnitude << endl;
 
-	}
+		//filter.demodulate(numSamps, my_channel.my_result);
+
+		//cout << filter.magnitude << endl;
+
+	
 
 	getchar();
 
