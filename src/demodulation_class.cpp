@@ -24,6 +24,9 @@ using Eigen::VectorXcd;
 using namespace std;
 using namespace literals;
 
+double wrapMax(double x, double max);
+
+
 
 Demod::Demod(double Fs, int numSamples)
 {
@@ -72,5 +75,33 @@ int Demod::demodulate(double numSamples, MatrixXd buffer_result_d) {
 	return 0;
 }
 
+int Demod::demodulate_w_phase(double numSamples, MatrixXd sensor_and_coil_data) {
+
+	// This function takes the sampled data of the sensor AND coil current
 
 
+	// Demodulate each frequency component using this matrix fir method.
+	result = sensor_and_coil_data.transpose() * demod_matrix;
+
+	// Calculate the amplitude of each component, both currentand magnetic field measurements are in here
+	magnitude_c = (2 * result.array().abs()) / numSamples;
+
+	// Calculate the phase angle of the field
+	PhaseY = result.array().arg();
+
+	// Calculate the phase between the currentand the magnetic field.
+	// This helps determine the axial orientation of the sensor.
+
+
+
+	for (int i = 0; i < 8; i++)
+		magnitude_r.push_back(magnitude_c.real()(i));
+
+	return 0;
+}
+
+
+double wrapMax(double x, double max)
+{
+	return fmod(max + fmod(x, max), max);		// integer math: `(max + x % max) % max` 
+}

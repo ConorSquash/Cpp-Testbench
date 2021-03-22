@@ -32,8 +32,17 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 
 MatrixXd continuous_result;
 
 
-DAQ::DAQ(double Fs, double samples, bool is_finite) 
+DAQ::DAQ(double Fs, double samples, bool is_finite, string channel1, string channel2)
 {
+
+	channel1 = "Dev1/ai" + channel1;
+	string str_obj1(channel1);
+	channel_char_arr1 = &str_obj1[0];
+
+	channel2 = "Dev1/ai" + channel2;
+	string str_obj2(channel2);
+	channel_char_arr2 = &str_obj2[0];
+
 	// Setup code
 	cout << "DAQ sampling at " << Fs << " Hz" << endl;
 
@@ -44,17 +53,18 @@ DAQ::DAQ(double Fs, double samples, bool is_finite)
 	read = 0;
 	//errBuff[2048] = { '\0' };
 
-	m_num_of_channels_used = 1;
+	m_num_of_channels_used = 2;
 	m_samps_per_chan = samples;
 
-	buffer_result.resize(samples, 1);
+	buffer_result.resize(samples, 2);
 
 
 	// DAQmx analog voltage channel and timing parameters
 
 	DAQmxErrChk(DAQmxCreateTask("", &taskHandle));
 
-	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, "Dev1/ai1", "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
+	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr1, "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
+	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr2, "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
 
 	if (is_finite) 
 		DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
@@ -80,10 +90,10 @@ int DAQ::ReadSamples()
 {
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
-	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 1000, &read, NULL));
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 2000, &read, NULL));
 
 	// Extract buffer into Eigen Matrix
-	my_result = read_data_buffer(1, m_samples, buff_data);
+	my_result = read_data_buffer(2, m_samples, buff_data);
 
 	DAQmxErrChk(DAQmxStopTask(taskHandle));
 
@@ -105,7 +115,7 @@ Error:
 int DAQ::ContinuousSamples()
 {
 
-	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(taskHandle, DAQmx_Val_Acquired_Into_Buffer, m_samples, 0, EveryNCallback, NULL));
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(taskHandle, DAQmx_Val_Acquired_Into_Buffer, 2*m_samples, 0, EveryNCallback, NULL));
 	
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
@@ -154,11 +164,12 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
 
 	// DAQmx Read Code
 
-	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, nSamples, 10.0, DAQmx_Val_GroupByChannel, buff_data, nSamples, &read, NULL));
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, nSamples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 2*nSamples, &read, NULL));
 
 	//continuous_result = read_data_buffer(1, nSamples, buff_data);
 
 	cout << buff_data[0] << endl;
+	//cout << buff_data[1001] << endl << endl;;
 
 Error:
 	if (DAQmxFailed(error)) {

@@ -20,27 +20,21 @@ int main() {
 	double Fs = 100e3;
 	int numSamps = 1000;
 
-	// Sets up the DAQ to sample channel 1 at Fs and fills a buffer of numSamps samples
-	DAQ my_channel(Fs, numSamps,FALSE);
+	// Sample specified channels at Fs and fills a buffer of numSamps samples (finite or cont)
+	DAQ my_channel(Fs, numSamps, TRUE, "1", "15");
 
-	my_channel.ContinuousSamples();
+	my_channel.ReadSamples();
+
+	cout << "Channel 1 " << my_channel.my_result(0,0) << endl;
+	cout << "Channel 15 " << my_channel.my_result(40, 1) << endl;
+
 
 	// Sets up demodulation parameters
-	//Demod filter(Fs, numSamps);
+	Demod filter(Fs, numSamps);
 	
+	filter.demodulate(numSamps, my_channel.my_result);
 
-
-	// ====== LOOP ======
-
-
-	// Reads the DAQ buffer into an Eigen matrix (variable my_result)
-
-
-
-
-		//filter.demodulate(numSamps, my_channel.my_result);
-
-		//cout << filter.magnitude << endl;
+	cout << filter.magnitude_r[1] << endl;
 
 	
 

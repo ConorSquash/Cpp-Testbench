@@ -30,13 +30,14 @@ private:
 	double m_samps_per_chan;
 	double m_num_of_channels_used;
 
-
+	char* channel_char_arr1;
+	char* channel_char_arr2;
 
 public:
 
 	MatrixXd  my_result;
 
-	DAQ(double Fs, double samples, bool is_finite);
+	DAQ(double Fs, double samples, bool is_finite, string channel1, string channel2);
 
 	int ReadSamples();
 

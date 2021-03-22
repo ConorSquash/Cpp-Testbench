@@ -15,6 +15,8 @@ public:
 
 	int demodulate(double numSamples, MatrixXd buffer_result_d);
 
+	int demodulate_w_phase(double numSamples, MatrixXd sensor_and_coil_data);
+
 	std::vector<double> magnitude_r;
 
 	MatrixXcd demod_matrix;
@@ -23,6 +25,7 @@ private:
 
 	VectorXcd result;
 	VectorXcd magnitude_c;
+	VectorXcd PhaseY;
 
 	double Ts;
 
