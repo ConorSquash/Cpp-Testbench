@@ -34,6 +34,7 @@ double wrapMax(double x, double max);
 
 double constrainAngle(double x);
 
+int sign(double x);
 
 int main() {
 
@@ -81,7 +82,7 @@ int main() {
 
 
 	for (int j = 0; j < 8; j++)
-		E.row(j) = exp(2 * M_PI * F(j) * t.array() * 1i);
+		E.row(j) = exp(2 * M_PI * F(j) * t.array() * -1i);
 
 
 	//for (int i = 0; i < 20; i++)
@@ -110,12 +111,9 @@ int main() {
 
 	X.transposeInPlace();
 
-	//for (int i = 0; i < 20; i++)
-		//cout << E(i,0) << endl;
+	//for (int i = 0; i < 30; i++)
+		//cout << X(1,i) << endl;
 
-	
-	//std::complex<double> z1 = 3.0 + 4i;   
-	//cout << std::arg(z1);
 
 	MatrixXcd Y;
 	MatrixXd MagY,PhaseY;
@@ -124,36 +122,68 @@ int main() {
 
 	//cout << Y << endl << endl;
 
-	MagY = 2 * Y.array().abs();
+	MagY = 2 * (Y.array().abs());
 
 	//cout << MagY << endl << endl;
 	
 	PhaseY = Y.array().arg();
 
-	cout << PhaseY << endl << endl;
-
+	//cout << PhaseY << endl << endl;
 
 	for (int i = 0; i < PhaseY.rows(); i++)
 		for (int j = 0; j < PhaseY.cols(); j++)
 			PhaseY(i, j) = constrainAngle(PhaseY(i, j));
 
-	cout << PhaseY << endl << endl;
+	//cout << PhaseY << endl << endl;
 
-		
-		
+	// Calculate the phase between the currentand the magnetic field.
+	// This helps determine the axial orientation of the sensor.
 
+	VectorXd Phase1;
+
+	Phase1 = PhaseY.row(0) - PhaseY.row(1);
+
+	//cout << Phase1 << endl << endl;
+
+	//cout << sign(5) << endl;
+
+	for (int i = 0; i < 7; i++)
+		if (abs(Phase1(i)) > M_PI)
+			Phase1(i) = -sign(Phase1(i) * (2*M_PI - abs(Phase1(i))));
+		
+	//cout << Phase1 << endl << endl;
+
+
+	// Taking the sign of the phase differenceand the magnetic field amplitudeand a scaling factor
+	// the magnetic field is determined
+
+	VectorXd signs(8),Bfield;
+
+	for (int i = 0; i < 7; i++)
+		signs(i) = sign(Phase1(i));
+
+	cout << signs << endl << endl;
+	
+	
+
+	Bfield = signs.transpose().array() * MagY.row(1).array();
+
+	cout << Bfield << endl;
 
 	getchar();
 
 	return 0;
 }
 
-double wrapMax(double x, double max)
+int sign(double x) 
 {
-	return fmod(max + fmod(x, max), max);		// integer math: `(max + x % max) % max` 
+	if (x > 0) return 1;
+	if (x < 0) return -1;
+	return 0;
 }
 
-double constrainAngle(double x) {
+double constrainAngle(double x) 
+{
 	x = fmod(x, 2*M_PI);
 	if (x < 0)
 		x += 2 * M_PI;

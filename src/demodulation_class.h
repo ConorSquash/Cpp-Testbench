@@ -6,6 +6,7 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXcd;
 using Eigen::MatrixXcd;
+using Eigen::VectorXd;
 
 class Demod
 {
@@ -25,7 +26,11 @@ private:
 
 	VectorXcd result;
 	VectorXcd magnitude_c;
-	VectorXcd PhaseY;
+
+	MatrixXcd Y;
+	MatrixXd MagY, PhaseY;
+	VectorXd Phase1;
+	VectorXd signs, Bfield;
 
 	double Ts;
 
