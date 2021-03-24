@@ -61,7 +61,7 @@ int main() {
 	x1_test = x1_test.array().sin();
 
 	x2_test = 2 * M_PI * 2000 * t;
-	x2_test = x2_test.array() + 10;
+	x2_test = x2_test.array() - M_PI_2;
 	x2_test = x2_test.array().sin();
 
 	x_test = x1_test + x2_test;
@@ -122,7 +122,7 @@ int main() {
 
 	//cout << Y << endl << endl;
 
-	MagY = 2 * (Y.array().abs());
+	MagY = (2 * (Y.array().abs())) / numSamples;
 
 	//cout << MagY << endl << endl;
 	

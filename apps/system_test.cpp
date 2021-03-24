@@ -45,7 +45,7 @@ int main() {
 	vector <double> initial_condition = { 0, 0, 0.275, M_PI_2 , M_PI_2 };   
 
 	// Sets up the DAQ to sample channel 1 at Fs and fills a buffer of numSamps samples
-	DAQ my_channel(Fs, numSamps);
+	DAQ my_channel(Fs, numSamps, TRUE, "1", "15");
 
 	Demod filter(Fs, numSamps); 	// Sets up the demodulation parameters
 
@@ -64,7 +64,7 @@ int main() {
 	// SOLVE ONCE OUTSIDE LOOP USING INITIAL CONDITIONS
 	// THEN USE DYNAMIC IC'S
 	my_channel.ReadSamples();
-	filter.demodulate(numSamps, my_channel.my_result);
+	filter.demodulate_w_phase(numSamps, my_channel.my_result);
 	PandO = my_sensor.Solve(filter.magnitude_r, initial_condition);
 
 	for (int i = 0; i < 9; i++)
@@ -73,10 +73,7 @@ int main() {
 		// Reads the DAQ buffer into an Eigen matrix (variable my_result)
 		my_channel.ReadSamples();
 
-		filter.demodulate(numSamps, my_channel.my_result);
-
-		//for (int i = 0; i < 8; i++)
-			//cout << filter.magnitude_r[i] << endl;
+		filter.demodulate_w_phase(numSamps, my_channel.my_result);
 
 		// Initial condition here is previously solved point
 		PandO = my_sensor.Solve(filter.magnitude_r, PandO);
