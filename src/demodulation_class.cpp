@@ -45,7 +45,7 @@ Demod::Demod(double Fs, int numSamples)
 	// Define the transmission frequencies of the emitter coil
 	VectorXd F(8);
 
-	F << 2500, 4860, 8500, 11020, 12500, 17888, 20000, 30000;
+	F << 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
 
 	MatrixXcd E(8, numSamples);   // Matrix of complex doubles
 

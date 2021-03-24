@@ -82,7 +82,7 @@ int main() {
 
 
 	for (int j = 0; j < 8; j++)
-		E.row(j) = exp(2 * M_PI * F(j) * t.array() * -1i);
+		E.row(j) = exp(2 * M_PI * F(j) * t.array() * 1i);
 
 
 	//for (int i = 0; i < 20; i++)
