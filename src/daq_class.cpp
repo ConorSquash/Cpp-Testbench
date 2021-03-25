@@ -4,7 +4,8 @@
 #include <NIDAQmx.h>
 #include "daq_class.h"
 #include <Dense>
-
+#include <chrono>
+#include <thread>    
 #define _USE_MATH_DEFINES
 #include "math.h"
 
@@ -20,51 +21,65 @@ using namespace std;
 //float64     data[1000];
 
 
-float64     buff_data[5000];
-MatrixXf    buffer_result;
+float64     buff_data[5500];
+MatrixXd    buffer_result;
 MatrixXd   buffer_result_d;
 
 int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
 int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
 
-MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]);
+MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5500]);
 
 MatrixXd continuous_result;
 
 
-DAQ::DAQ(double Fs, double samples, bool is_finite, string channel1, string channel2)
+DAQ::DAQ(double Fs, double samples, bool is_finite, string dev, string channel1, string channel2)
 {
 
-	channel1 = "Dev1/ai" + channel1;
+	channel1 = dev + "/ai" + channel1;
 	string str_obj1(channel1);
 	channel_char_arr1 = &str_obj1[0];
 
-	channel2 = "Dev1/ai" + channel2;
+	channel2 = dev + "/ai" + channel2;
 	string str_obj2(channel2);
 	channel_char_arr2 = &str_obj2[0];
+
 
 	// Setup code
 	cout << "DAQ sampling at " << Fs << " Hz" << endl;
 
 	m_samples = samples;
+	m_Fs = Fs;
 
 	error = 0;
 	taskHandle = 0;
+	taskHandle1 = 0;
 	read = 0;
 	//errBuff[2048] = { '\0' };
 
-	m_num_of_channels_used = 2;
+	m_num_of_channels_used = 1;
 	m_samps_per_chan = samples;
 
-	buffer_result.resize(samples, 2);
+	buffer_result.resize(samples, 1);
 
+
+
+	DAQmxErrChk(DAQmxCreateTask("", &taskHandle1));
+
+	DAQmxErrChk(DAQmxCreateCOPulseChanFreq(taskHandle1, "Dev1/ctr0", "", DAQmx_Val_Hz, DAQmx_Val_Low, 0.0, 1250000, 0.5));
+
+	DAQmxErrChk(DAQmxCfgImplicitTiming(taskHandle1, DAQmx_Val_ContSamps, 1000));
+
+	DAQmxErrChk(DAQmxStartTask(taskHandle1));
+
+	//==============================================
 
 	// DAQmx analog voltage channel and timing parameters
 
 	DAQmxErrChk(DAQmxCreateTask("", &taskHandle));
 
-	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr1, "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
-	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr2, "", DAQmx_Val_RSE, 0, 5, DAQmx_Val_Volts, NULL));
+	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr1, "", DAQmx_Val_RSE, -10, 10, DAQmx_Val_Volts, NULL));
+	//DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr2, "", DAQmx_Val_RSE, -10, 10, DAQmx_Val_Volts, NULL));
 
 	if (is_finite) 
 		DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
@@ -88,14 +103,22 @@ Error:
 
 int DAQ::ReadSamples()
 {
+
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
-	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, m_samples, 10.0, DAQmx_Val_GroupByChannel, buff_data, 2000, &read, NULL));
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, -1, 10.0, DAQmx_Val_GroupByChannel, buff_data, 5500, &read, NULL));
+
+	//cout << buff_data[1999] << endl;
 
 	// Extract buffer into Eigen Matrix
-	my_result = read_data_buffer(2, m_samples, buff_data);
+	my_result = read_data_buffer(1, m_samples, buff_data);
+
+	//cout << my_result(0, 0) << endl << endl;
 
 	DAQmxErrChk(DAQmxStopTask(taskHandle));
+
 
 	return 0;
 
@@ -115,7 +138,7 @@ Error:
 int DAQ::ContinuousSamples()
 {
 
-	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(taskHandle, DAQmx_Val_Acquired_Into_Buffer, 2*m_samples, 0, EveryNCallback, NULL));
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(taskHandle, DAQmx_Val_Acquired_Into_Buffer, m_samples, 0, EveryNCallback, NULL));
 	
 	DAQmxErrChk(DAQmxStartTask(taskHandle));
 
@@ -136,10 +159,12 @@ Error:
 }
 
 
-MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]) 
+MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5500]) 
 {
 
 	// Sorts the buffer into columns in an eigen matrix
+
+
 
 	for (int j = 0; j < num_of_channels_used; j++)
 		for (int i = 0; i < samps_per_chan; i++)
@@ -147,9 +172,9 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 
 
 
 	// Need to cast to double when demodulating later
-	buffer_result_d = buffer_result.cast<double>();      
+	//buffer_result_d = buffer_result.cast<double>();      
 
-	return buffer_result_d;
+	return buffer_result;
 }
 
 

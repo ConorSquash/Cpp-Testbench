@@ -57,6 +57,8 @@ struct MySolver
 
 		VectorXd out_vector(8);        // A vector to get the result of FluxModel - FluxReal
 
+		//cout << "sf = " << sensor_flux << endl;
+
 		sensor_objective_function(currentPandO, sensor_flux, X_Matrix, Y_Matrix, Z_Matrix, K, out_vector);
 
 		fval = out_vector;
@@ -197,9 +199,9 @@ lsq::LevenbergMarquardt <double, MySolver> optimizer;
 int Solver::ConfigureSolver() 
 {
 	
-	optimizer.setMaxIterations(50);
+	optimizer.setMaxIterations(100);
 
-	optimizer.setMaxIterationsLM(1000);
+	optimizer.setMaxIterationsLM(100);
 
 	optimizer.setLambdaIncrease(3);
 
@@ -281,8 +283,8 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	//cout << " \n Iterations: " << result.iterations << endl;
 
 	
-	//cout << "Done! Converged: " << (result.converged ? "true" : "false")
-		//<< " Iterations: " << result.iterations << std::endl;
+	cout << "Done! Converged: " << (result.converged ? "true" : "false")
+		<< " Iterations: " << result.iterations << std::endl;
 
 
 	/*
@@ -291,10 +293,10 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	*/
 
-
+	PandO.resize(5);
 
 	for (int i = 0; i < 5; i++)                // Return x,y,z in metres and theta/phi in radians
-		PandO.push_back(result.xval(i));
+		PandO[i] = result.xval(i);
 
 	PandO[3] = wrapMax(PandO[3], M_PI);     // Wrap theta from 0 - pi degrees
 	//PandO[3] = 180 - wrapMax(PandO[3], M_PI);     // Wrap theta from 0 - pi degrees

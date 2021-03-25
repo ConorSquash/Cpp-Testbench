@@ -17,12 +17,14 @@ private:
 
 	int32       error;
 	TaskHandle  taskHandle;
+	TaskHandle  taskHandle1;
 	int32       read;
 	//float64     data[1000];
 	char        errBuff[2048] = { '\0' };
 	float64     buff_data[5000];
 
 	double m_samples;
+	double m_Fs;
 
 	//int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
 	//int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
@@ -37,7 +39,7 @@ public:
 
 	MatrixXd  my_result;
 
-	DAQ(double Fs, double samples, bool is_finite, string channel1, string channel2);
+	DAQ(double Fs, double samples, bool is_finite, string dev, string channel1, string channel2);
 
 	int ReadSamples();
 

@@ -59,7 +59,7 @@ void OpenIGTLink::SendMessage(vector <double> pando)
 
             socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
 
-            igtl::Sleep(interval); // wait
+            //igtl::Sleep(interval); // wait
         
     }
 
@@ -89,9 +89,9 @@ void OpenIGTLink::CreateMatrix(vector <double> pando)
     m_matrix[3][2] = 0;
 
     // Fourth column
-    m_matrix[0][3] = pando[0] * 100;
-    m_matrix[1][3] = pando[1] * 100;
-    m_matrix[2][3] = pando[2] * 100;
+    m_matrix[0][3] = pando[0] * 1000;
+    m_matrix[1][3] = pando[1] * 1000;
+    m_matrix[2][3] = pando[2] * 1000;
     m_matrix[3][3] = 1;
 
     //igtl::PrintMatrix(m_matrix);

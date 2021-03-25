@@ -34,7 +34,7 @@ Demod::Demod(double Fs, int numSamples)
 {
 	cout << "\n -> SETTING DEMOD PARMS " << endl;
 
-	Ts = 1 / Fs;
+	Ts = 1.0 / Fs;
 
 	// Specify the number of time samples, must be the same as the length of X
 	VectorXd t(numSamples);
@@ -45,19 +45,26 @@ Demod::Demod(double Fs, int numSamples)
 	// Define the transmission frequencies of the emitter coil
 	VectorXd F(8);
 
-	F << 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
+	// FREQS FOR DEBUG WITH ARDUINO
+	F << 4860, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
+	// COIL FREQS FOR ANSER
+	//F << 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
 
 	MatrixXcd E(8, numSamples);   // Matrix of complex doubles
 
 	// Define the demodulation matrix for the asynchronous demodulation scheme
 
 	for (int j = 0; j < 8; j++)
-		E.row(j) = exp(2 * M_PI * F(j) * 1i * t.array());
+		E.row(j) = exp(2 * M_PI * F(j) * -1i * t.array());
 
 	E.transposeInPlace();		// Must transpose in place when replacing with a transpose of itself!!! 
 								// Same as E = E.transpose().eval();
 
 	demod_matrix = E;
+
+	magnitude_r.resize(8);
+	signs.resize(8);
+
 
 }
 
@@ -71,8 +78,11 @@ int Demod::demodulate(double numSamples, MatrixXd buffer_result_d) {
 
 	magnitude_c = (2 * result.array().abs()) / numSamples;
 
+	//magnitude_r.resize(8);
+
+
 	for (int i = 0; i < 8; i++)
-		magnitude_r.push_back(magnitude_c.real()(i));
+		magnitude_r[i] = magnitude_c.real()(i);
 
 	return 0;
 }
@@ -88,6 +98,8 @@ int Demod::demodulate_w_phase(double numSamples, MatrixXd sensor_and_coil_data) 
 	// Calculate the amplitude of each component, both currentand magnetic field measurements are in here
 	MagY = (2 * Y.array().abs()) / numSamples;
 
+	//cout << "MagY(0, 0) = " << MagY(0, 0) << endl;
+
 	// Calculate the phase angle of the field
 	PhaseY = Y.array().arg();
 
@@ -100,18 +112,29 @@ int Demod::demodulate_w_phase(double numSamples, MatrixXd sensor_and_coil_data) 
 
 	Phase1 = PhaseY.row(0) - PhaseY.row(1);
 
-	for (int i = 0; i < 7; i++)
-		if (abs(Phase1(i)) > M_PI)
-			Phase1(i) = -sign(Phase1(i) * (2 * M_PI - abs(Phase1(i))));
+	for (int i = 0; i < Phase1.rows(); i++)
+		for (int j = 0; j < Phase1.cols(); j++)
+			Phase1(i, j) = constrainAngle(Phase1(i, j));
 
-	for (int i = 0; i < 7; i++)
-		signs(i) = sign(Phase1(i));
-
-	Bfield = signs.transpose().array() * MagY.row(1).array();
-
+	//signs.resize(8);
 
 	for (int i = 0; i < 8; i++)
-		magnitude_r.push_back(Bfield(i));
+		//if (abs(Phase1(i)) > M_PI)
+		signs(i) = sign(Phase1(i)); //* (2 * M_PI - abs(Phase1(i))));
+
+	
+
+	//for (int i = 0; i < 8; i++)
+	//	signs(i) = sign(Phase1(i));
+
+	Bfield = signs.transpose().array() * MagY.row(0).array();
+
+	//magnitude_r.resize(8);
+
+	//cout << "Bfield(0) = " << Bfield(0) << endl;
+
+	for (int i = 0; i < 8; i++)
+		magnitude_r[i] = Bfield(i);
 
 	return 0;
 }
@@ -119,8 +142,8 @@ int Demod::demodulate_w_phase(double numSamples, MatrixXd sensor_and_coil_data) 
 
 int sign(double x)
 {
-	if (x > 0) return 1;
-	if (x < 0) return -1;
+	if (x > M_PI) return 1;
+	if (x < M_PI) return -1;
 	return 0;
 }
 
