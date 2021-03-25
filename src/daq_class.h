@@ -18,7 +18,9 @@ private:
 	int32       error;
 	TaskHandle  taskHandle;
 	TaskHandle  taskHandle1;
+	TaskHandle  taskHandle2;
 	int32       read;
+
 	//float64     data[1000];
 	char        errBuff[2048] = { '\0' };
 	float64     buff_data[5000];
@@ -42,6 +44,8 @@ public:
 	DAQ(double Fs, double samples, bool is_finite, string dev, string channel1, string channel2);
 
 	int ReadSamples();
+
+	int ReadSamples2();
 
 	int ContinuousSamples();
 

@@ -19,7 +19,7 @@ int main() {
 	// ====== SETUP ======
 
 	double Fs = 100e3;
-	int numSamps = 5500;
+	int numSamps = 5000;
 
 	// Sample specified channels at Fs and fills a buffer of numSamps samples (finite or cont)
 	DAQ my_channel(Fs, numSamps, TRUE, "Dev1" , "1", "15");
@@ -38,7 +38,7 @@ int main() {
 	while (1)
 	{
 
-		my_channel.ReadSamples();
+		my_channel.ReadSamples2();
 
 		//cout << "Channel 1 " << my_channel.my_result(0,0) << endl;
 		//cout << "Channel 15 " << my_channel.my_result(40, 1) << endl << endl;
@@ -47,13 +47,13 @@ int main() {
 
 		//results_file << my_channel.my_result.col(0) << endl;
 
-	
 		filter.demodulate(numSamps, my_channel.my_result);
+		//filter.demodulate_w_phase(numSamps, my_channel.my_result);
 
 		//cout << filter.magnitude_r[5];
 
 		for (int i = 0; i < 8; i++)
-			//results_file_demod << filter.magnitude_r[i] << endl;
+		//	//results_file_demod << filter.magnitude_r[i] << endl;
 			cout << filter.magnitude_r[i] << endl;
 
 		cout << endl;

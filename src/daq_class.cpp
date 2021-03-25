@@ -21,14 +21,17 @@ using namespace std;
 //float64     data[1000];
 
 
-float64     buff_data[5500];
+float64     buff_data[5000];
+float64     buff_data2[5000];
+
 MatrixXd    buffer_result;
 MatrixXd   buffer_result_d;
 
 int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
 int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
 
-MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5500]);
+MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]);
+MatrixXd read_data_buffer2(int samps_per_chan, float64 buff_data[5000], float64 buff_data2[5000]);
 
 MatrixXd continuous_result;
 
@@ -52,15 +55,18 @@ DAQ::DAQ(double Fs, double samples, bool is_finite, string dev, string channel1,
 	m_Fs = Fs;
 
 	error = 0;
+
 	taskHandle = 0;
 	taskHandle1 = 0;
+	taskHandle2 = 0;
+
 	read = 0;
 	//errBuff[2048] = { '\0' };
 
 	m_num_of_channels_used = 1;
 	m_samps_per_chan = samples;
 
-	buffer_result.resize(samples, 1);
+	buffer_result.resize(samples, 2);
 
 
 
@@ -77,12 +83,17 @@ DAQ::DAQ(double Fs, double samples, bool is_finite, string dev, string channel1,
 	// DAQmx analog voltage channel and timing parameters
 
 	DAQmxErrChk(DAQmxCreateTask("", &taskHandle));
+	DAQmxErrChk(DAQmxCreateTask("", &taskHandle2));
 
 	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr1, "", DAQmx_Val_RSE, -10, 10, DAQmx_Val_Volts, NULL));
-	//DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle, channel_char_arr2, "", DAQmx_Val_RSE, -10, 10, DAQmx_Val_Volts, NULL));
+	DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2, channel_char_arr2, "", DAQmx_Val_RSE, -10, 10, DAQmx_Val_Volts, NULL));
 
 	if (is_finite) 
+	{
 		DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
+		DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle2, "", Fs, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, samples));
+	
+	}
 	else
 		DAQmxErrChk(DAQmxCfgSampClkTiming(taskHandle, "", Fs, DAQmx_Val_Rising, DAQmx_Val_ContSamps, samples));
 
@@ -108,7 +119,7 @@ int DAQ::ReadSamples()
 
 	//std::this_thread::sleep_for(std::chrono::seconds(1));
 
-	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, -1, 10.0, DAQmx_Val_GroupByChannel, buff_data, 5500, &read, NULL));
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, -1, 10.0, DAQmx_Val_GroupByChannel, buff_data, 5000, &read, NULL));
 
 	//cout << buff_data[1999] << endl;
 
@@ -119,6 +130,39 @@ int DAQ::ReadSamples()
 
 	DAQmxErrChk(DAQmxStopTask(taskHandle));
 
+
+	return 0;
+
+Error:
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+
+		// DAQmx Stop Code
+
+		DAQmxStopTask(taskHandle);
+		DAQmxClearTask(taskHandle);
+		printf("DAQmx Error: %s\n", errBuff);
+	}
+
+}
+
+int DAQ::ReadSamples2()
+{
+
+	DAQmxErrChk(DAQmxStartTask(taskHandle));
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, -1, 10.0, DAQmx_Val_GroupByChannel, buff_data, 5000, &read, NULL));
+	//cout << buff_data[0] << endl;
+	DAQmxErrChk(DAQmxStopTask(taskHandle));
+
+
+	DAQmxErrChk(DAQmxStartTask(taskHandle2));
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle2, -1, 10.0, DAQmx_Val_GroupByChannel, buff_data2, 5000, &read, NULL));
+	//cout << buff_data2[0] << endl;
+	DAQmxErrChk(DAQmxStopTask(taskHandle2));
+
+	// Extract buffer into Eigen Matrix
+	my_result = read_data_buffer2(m_samples, buff_data , buff_data2);
 
 	return 0;
 
@@ -159,7 +203,7 @@ Error:
 }
 
 
-MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5500]) 
+MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 buff_data[5000]) 
 {
 
 	// Sorts the buffer into columns in an eigen matrix
@@ -173,6 +217,20 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 
 
 	// Need to cast to double when demodulating later
 	//buffer_result_d = buffer_result.cast<double>();      
+
+	return buffer_result;
+}
+
+MatrixXd read_data_buffer2(int samps_per_chan, float64 buff_data[5000], float64 buff_data2[5000])
+{
+
+	// Sorts the buffer into columns in an eigen matrix
+
+	for (int i = 0; i < samps_per_chan; i++)
+	{
+		buffer_result.col(0)(i) = buff_data[i];
+		buffer_result.col(1)(i) = buff_data2[i];
+	}    
 
 	return buffer_result;
 }
