@@ -49,6 +49,8 @@ public:
 
 	int ContinuousSamples();
 
+	
+
 };
 
 #endif

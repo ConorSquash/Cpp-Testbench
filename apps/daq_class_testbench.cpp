@@ -13,51 +13,49 @@ using Eigen::MatrixXd;
 
 using namespace std;
 
+extern MatrixXd buffer_result;
+
+
+
 
 int main() {
 
 	// ====== SETUP ======
 
 	double Fs = 100e3;
-	int numSamps = 5000;
+	int numSamps = 1000;
 
 	// Sample specified channels at Fs and fills a buffer of numSamps samples (finite or cont)
-	DAQ my_channel(Fs, numSamps, TRUE, "Dev1" , "1", "15");
+	DAQ my_channel(Fs, numSamps, FALSE, "Dev2" , "0", "4");
 
 	// Sets up demodulation parameters
 	Demod filter(Fs, numSamps);
 
 
 	// Create text file to write data to
+	/*
 	ofstream results_file;
 	ofstream results_file_demod;
-
 	results_file.open("samples.txt");
 	results_file_demod.open("demodulated.txt");
+	*/
 
+
+
+	
+	
 	while (1)
 	{
 
-		my_channel.ReadSamples2();
-
-		//cout << "Channel 1 " << my_channel.my_result(0,0) << endl;
-		//cout << "Channel 15 " << my_channel.my_result(40, 1) << endl << endl;
-
-		//cout << "Rows : " << my_channel.my_result.rows() << endl;
-
-		//results_file << my_channel.my_result.col(0) << endl;
-
-		filter.demodulate(numSamps, my_channel.my_result);
-		//filter.demodulate_w_phase(numSamps, my_channel.my_result);
-
-		//cout << filter.magnitude_r[5];
+		filter.demodulate(numSamps, buffer_result);
 
 		for (int i = 0; i < 8; i++)
-		//	//results_file_demod << filter.magnitude_r[i] << endl;
 			cout << filter.magnitude_r[i] << endl;
 
 		cout << endl;
+
 	}
+	
 
 	
 

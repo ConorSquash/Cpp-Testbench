@@ -46,9 +46,10 @@ Demod::Demod(double Fs, int numSamples)
 	VectorXd F(8);
 
 	// FREQS FOR DEBUG WITH ARDUINO
-	F << 4860, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
+	//F << 4860, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
+
 	// COIL FREQS FOR ANSER
-	//F << 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
+	F << 20000, 22000, 24000, 26000, 28000, 30000, 32000, 34000;
 
 	MatrixXcd E(8, numSamples);   // Matrix of complex doubles
 

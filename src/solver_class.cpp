@@ -30,6 +30,9 @@ using namespace std;
 
 
 double wrapMax(double x, double max);
+double constrainAngle2Pi(double x);
+double constrainAnglePi(double x);
+
 
 // Coil variables
 VectorXd sensor_flux(8);
@@ -194,18 +197,23 @@ int Solver::Setup()
 
 
 // Optimizer 
+// Constant step size
 lsq::LevenbergMarquardt <double, MySolver> optimizer;
+
+//lsq::LevenbergMarquardt <double, MySolver, lsq::ArmijoBacktracking<double>> optimizer;
+
+//lsq::GaussNewton <double, MySolver, lsq::ArmijoBacktracking<double>> optimizer;
 
 int Solver::ConfigureSolver() 
 {
 	
-	optimizer.setMaxIterations(100);
+	optimizer.setMaxIterations(500);
 
-	optimizer.setMaxIterationsLM(100);
+	optimizer.setMaxIterationsLM(500);
 
-	optimizer.setLambdaIncrease(3);
+	optimizer.setLambdaIncrease(2);
 
-	optimizer.setLambdaDecrease(0.005);
+	optimizer.setLambdaDecrease(0.05);
 
 	optimizer.setThreads(0);
 
@@ -225,13 +233,15 @@ int Solver::ConfigureSolver()
 	optimizer.setMinError(1e-15);
 
 	// Set the the parametrized StepSize functor used for the step calculation.
-	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-10, 1.0, 0));
+	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-4, 1.0, 0));
 
 	// Turn verbosity on, so the optimizer prints status updates after each iteration.
 	optimizer.setVerbosity(0);
 
 	cout << "\n -> SOLVER CONFIGURED" << endl;
 
+	initialGuess.resize(5);
+	PandO.resize(5);
 
 	return 0;
 
@@ -257,7 +267,7 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	// The simulated sensor calibration contant is passed to the objective function
 	// Objective function is called in Struct 'MySolver' at the top of the program
 
-	initialGuess.resize(5);
+	//initialGuess.resize(5);
 
 	initialGuess(0) = initial_condition[0];
 	initialGuess(1) = initial_condition[1];
@@ -265,23 +275,12 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	initialGuess(3) = initial_condition[3];
 	initialGuess(4) = initial_condition[4];
 
-	//cout << "\n -> SOLVING FOR INITIAL GUESS" << endl;
-	//cout << " x : " << initialGuess(0) << endl;
-	//cout << " y : " << initialGuess(1) << endl;
-	//cout << " z : " << initialGuess(2) << endl;
-	//cout << " Pitch : " << initialGuess(3) << endl;
-	//cout << " Yaw : " << initialGuess(4) << endl;
-
-	iterations = 0;
 
 	for (int i = 0; i < 8; i++)
 		sensor_flux(i) = amplitudes[i];
 
 	// Start the optimization.
 	auto result = optimizer.minimize(initialGuess);
-
-	//cout << " \n Iterations: " << result.iterations << endl;
-
 	
 	cout << "Done! Converged: " << (result.converged ? "true" : "false")
 		<< " Iterations: " << result.iterations << std::endl;
@@ -293,13 +292,12 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	*/
 
-	PandO.resize(5);
+	//PandO.resize(5);
 
 	for (int i = 0; i < 5; i++)                // Return x,y,z in metres and theta/phi in radians
 		PandO[i] = result.xval(i);
 
 	PandO[3] = wrapMax(PandO[3], M_PI);     // Wrap theta from 0 - pi degrees
-	//PandO[3] = 180 - wrapMax(PandO[3], M_PI);     // Wrap theta from 0 - pi degrees
 	PandO[4] = wrapMax(abs(PandO[4]), 2 * M_PI);     // Wrap phi to 0 - 2pi degrees
 
 	if (PandO[2] < 0)               // If z is negative, take positive value of z and mirror theta
@@ -307,6 +305,16 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 		PandO[2] = abs(PandO[2]);
 		PandO[3] = M_PI - PandO[3];
 	}
+
+
+
+	//PandO[3] = constrainAnglePi(PandO[3]);     // Wrap theta from 0 - pi degrees
+	//PandO[4] = constrainAngle2Pi(PandO[4]);   // Wrap phi to 0 - 2pi degrees
+	//if (PandO[2] < 0)               // If z is negative, take positive value of z and mirror theta
+	//{
+	//	PandO[2] = abs(PandO[2]);
+	//	PandO[3] = M_PI - PandO[3];
+	//}
 
 	return PandO;
 }
@@ -316,6 +324,21 @@ double wrapMax(double x, double max)
 	return fmod(max + fmod(x, max), max);		// integer math: `(max + x % max) % max` 
 }
 
+double constrainAngle2Pi(double x)
+{
+	x = fmod(x, 2 * M_PI);
+	if (x < 0)
+		x += 2 * M_PI;
+	return x;
+}
+
+double constrainAnglePi(double x)
+{
+	x = fmod(x, M_PI);
+	if (x < 0)
+		x += M_PI;
+	return x;
+}
 
 
 vector <double> Solver::generate_points(double points, double spacing, bool isZ, double offset)

@@ -38,13 +38,15 @@ OpenIGTLink::OpenIGTLink(int port, float fps)
     serverSocket = igtl::ServerSocket::New();
     r = serverSocket->CreateServer(port);
 
+    // Waiting for Connection
+    socket = serverSocket->WaitForConnection(1000);
+
 }
 
 void OpenIGTLink::SendMessage(vector <double> pando)
 {
 
-    // Waiting for Connection
-    socket = serverSocket->WaitForConnection(1000);
+
 
     if (socket.IsNotNull()) // if client connected
     {
