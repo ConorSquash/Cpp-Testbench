@@ -4,6 +4,7 @@
 
 #include <NIDAQmx.h>
 #include <Dense>
+#include <fstream>
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -48,6 +49,9 @@ public:
 	int ReadSamples2();
 
 	int ContinuousSamples();
+
+	// Create text file to write P&O data to
+	ofstream samples_file;
 
 	
 

@@ -220,17 +220,17 @@ int Solver::ConfigureSolver()
 	// Set the minimum length of the gradient.
 	// The optimizer stops minimizing if the gradient length falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 1e-9).
-	optimizer.setMinGradientLength(1e-15);
+	optimizer.setMinGradientLength(1e-12);
 
 	// Set the minimum length of the step.
 	// The optimizer stops minimizing if the step length falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 1e-9).
-	optimizer.setMinStepLength(1e-15);
+	optimizer.setMinStepLength(1e-12);
 
 	// Set the minimum least squares error.
 	// The optimizer stops minimizing if the error falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 0).
-	optimizer.setMinError(1e-15);
+	optimizer.setMinError(1e-12);
 
 	// Set the the parametrized StepSize functor used for the step calculation.
 	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-4, 1.0, 0));
@@ -242,6 +242,19 @@ int Solver::ConfigureSolver()
 
 	initialGuess.resize(5);
 	PandO.resize(5);
+
+
+	x_min = -0.5;
+	y_min = -0.5;
+	z_min = 0;
+	theta_min = -M_PI;
+	phi_min = -3 * M_PI;
+
+	x_max = 0.5;
+	y_max = 0.5;
+	z_max = 0.5;
+	theta_max = M_PI;
+	phi_max = 3 * M_PI;
 
 	return 0;
 
@@ -267,14 +280,11 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	// The simulated sensor calibration contant is passed to the objective function
 	// Objective function is called in Struct 'MySolver' at the top of the program
 
-	//initialGuess.resize(5);
-
 	initialGuess(0) = initial_condition[0];
 	initialGuess(1) = initial_condition[1];
 	initialGuess(2) = initial_condition[2];
 	initialGuess(3) = initial_condition[3];
 	initialGuess(4) = initial_condition[4];
-
 
 	for (int i = 0; i < 8; i++)
 		sensor_flux(i) = amplitudes[i];
@@ -292,19 +302,40 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 
 	*/
 
-	//PandO.resize(5);
+	// If the solver doesnt converge or is outside the bounds then return the initial condition
+	// which is the previously solved for point
 
-	for (int i = 0; i < 5; i++)                // Return x,y,z in metres and theta/phi in radians
-		PandO[i] = result.xval(i);
-
-	PandO[3] = wrapMax(PandO[3], M_PI);     // Wrap theta from 0 - pi degrees
-	PandO[4] = wrapMax(abs(PandO[4]), 2 * M_PI);     // Wrap phi to 0 - 2pi degrees
-
-	if (PandO[2] < 0)               // If z is negative, take positive value of z and mirror theta
+	if ((result.converged == 0))
 	{
-		PandO[2] = abs(PandO[2]);
-		PandO[3] = M_PI - PandO[3];
+		cout << "Did not converge! -->> Returning initial condition" <<  endl;
+
+		return initial_condition;
 	}
+	else if (((result.xval(0) > x_max) || (result.xval(0) < x_min)) || ((result.xval(1) > y_max) || (result.xval(1) < y_min)) || ((result.xval(2) > z_max) || (result.xval(2) < z_min)))
+	{
+		cout << "Out of bounds! -->> Returning initial condition" << endl;
+
+		return initial_condition;
+	}
+	else
+	{
+
+		for (int i = 0; i < 5; i++)                // Return x,y,z in metres and theta/phi in radians
+			PandO[i] = result.xval(i);
+
+		PandO[3] = constrainAnglePi(PandO[3]);     // Wrap theta from 0 - pi degrees
+		PandO[4] = constrainAngle2Pi(PandO[4]);   // Wrap phi to 0 - 2pi degrees
+
+		//if (PandO[2] < 0)               // If z is negative, take positive value of z and mirror theta
+		//{
+		//	PandO[2] = abs(PandO[2]);
+		//	PandO[3] = M_PI - PandO[3];
+		//}
+
+		return PandO;
+	}
+
+
 
 
 
@@ -316,7 +347,7 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	//	PandO[3] = M_PI - PandO[3];
 	//}
 
-	return PandO;
+	//return PandO;
 }
 
 double wrapMax(double x, double max)

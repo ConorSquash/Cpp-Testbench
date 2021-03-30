@@ -21,6 +21,18 @@ private:
 	int iterations;
 	VectorXd initialGuess;
 
+	double x_min;
+	double y_min;
+	double z_min;
+	double theta_min;
+	double phi_min;
+
+	double x_max;
+	double y_max;
+	double z_max;
+	double theta_max;
+	double phi_max;
+
 public:
 	
 	int Setup();
