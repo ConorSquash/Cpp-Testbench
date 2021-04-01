@@ -90,7 +90,7 @@ int main() {
 
 	vector <double> static_cal = { -0.4324,-0.2946, -0.2106,-0.1565,-0.1234,-0.0984,-0.0785,-0.0710 };
 
-	vector <double> cal = { -2.5968, -1.6552, -1.0803, -0.7937, -0.5783, -0.4606, -0.3466, -0.2964 };
+	vector <double> cal = { 2.5968, -1.6552, -1.0803, -0.7937, -0.5783, -0.4606, -0.3466, -0.2964 };
 	//vector <double> cal = { 2.5968, 1.6552, 1.0803, 0.7937, 0.5783, 0.4606, 0.3466, 0.2964 };
 
 	int port = 18944;	// Default port
@@ -131,7 +131,7 @@ int main() {
 
 
 	//auto start = high_resolution_clock::now();		// Get starting timepoint
-	while (1)
+	while (count < 5000)
 	{ 
 
 		//my_channel.ReadSamples2();
@@ -145,16 +145,17 @@ int main() {
 		//filter.demodulate_w_phase(numSamps, my_channel.my_result);
 
 
+		mtx.unlock();
 		
 		//results_file << my_channel.my_result << endl;
 
 
-		for (int i = 0; i < 8; i++)
-			cout << filter.magnitude_r[i] << endl;
+		//for (int i = 0; i < 8; i++)
+			//cout << filter.magnitude_r[i] << endl;
 
-		cout << endl;
+		//cout << endl;
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 
 
@@ -165,7 +166,7 @@ int main() {
 
 		// From demodulation code
 		//PandO = my_sensor.Solve(filter.magnitude_r, initial_condition);
-		//PandO = my_sensor.Solve(filter.magnitude_r, PandO);
+		PandO = my_sensor.Solve(filter.magnitude_r, PandO);
 
 		// When using text file of sensor fluxes
 		//PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   
@@ -179,9 +180,8 @@ int main() {
 		//cout << " Yaw : " << PandO[4]  << " rads " << endl << endl;
 
 
-		//my_server.SendMessage(PandO);
+		my_server.SendIGTMessage(PandO);
 
-		mtx.unlock();
 		
 		
 		//std::this_thread::sleep_for(std::chrono::milliseconds(250));
@@ -190,10 +190,10 @@ int main() {
 
 		count++;
 
-		if (count == num_of_points)
-		{
+		//if (count == num_of_points)
+		
 			//count = 0;
-		}
+		
 	}
 	
 	

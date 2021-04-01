@@ -43,7 +43,7 @@ OpenIGTLink::OpenIGTLink(int port, float fps)
 
 }
 
-void OpenIGTLink::SendMessage(vector <double> pando)
+void OpenIGTLink::SendIGTMessage(vector <double> pando)
 {
 
 

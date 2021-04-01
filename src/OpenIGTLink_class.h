@@ -41,7 +41,7 @@ public:
 
     OpenIGTLink(int port, float fps);
 
-    void SendMessage(vector<double> pando);
+    void SendIGTMessage(vector<double> pando);
 
 
 };

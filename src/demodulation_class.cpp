@@ -117,12 +117,19 @@ int Demod::demodulate_w_phase(double numSamples, MatrixXd sensor_and_coil_data) 
 	// Calculate the phase between the currentand the magnetic field.
 	// This helps determine the axial orientation of the sensor.
 
+	//cout << "sensor : " << PhaseY.row(0) << endl;
+	//cout << " current : " << PhaseY.row(1) << endl;
+
+
 	Phase1 = PhaseY.row(0) - PhaseY.row(1);
+
+
 
 	for (int i = 0; i < Phase1.rows(); i++)
 		for (int j = 0; j < Phase1.cols(); j++)
 			Phase1(i, j) = constrainAngle(Phase1(i, j));
 
+	//cout << " difference : " << Phase1.transpose() << endl << endl;
 	//signs.resize(8);
 
 	for (int i = 0; i < 8; i++)
@@ -156,8 +163,9 @@ int sign(double x)
 
 double constrainAngle(double x)
 {
-	x = fmod(x, 2 * M_PI);
+	double x_temp;
+	x_temp = fmod(x, 2 * M_PI);
 	if (x < 0)
-		x += 2 * M_PI;
-	return x;
+		x_temp += 2 * M_PI;
+	return x_temp;
 }

@@ -225,12 +225,12 @@ int Solver::ConfigureSolver()
 	// Set the minimum length of the step.
 	// The optimizer stops minimizing if the step length falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 1e-9).
-	optimizer.setMinStepLength(1e-12);
+	optimizer.setMinStepLength(1e-5);
 
 	// Set the minimum least squares error.
 	// The optimizer stops minimizing if the error falls below this value.
 	// Set it to 0 or negative to disable this stop criterion (default is 0).
-	optimizer.setMinError(1e-12);
+	optimizer.setMinError(1e-6);
 
 	// Set the the parametrized StepSize functor used for the step calculation.
 	//optimizer.setStepSize(lsq::ArmijoBacktracking<double>(0.8, 0.1, 1e-4, 1.0, 0));
