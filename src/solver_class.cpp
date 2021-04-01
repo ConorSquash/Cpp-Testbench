@@ -292,8 +292,8 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	// Start the optimization.
 	auto result = optimizer.minimize(initialGuess);
 	
-	cout << "Done! Converged: " << (result.converged ? "true" : "false")
-		<< " Iterations: " << result.iterations << std::endl;
+	//cout << "Done! Converged: " << (result.converged ? "true" : "false")
+	//	<< " Iterations: " << result.iterations << std::endl;
 
 
 	/*

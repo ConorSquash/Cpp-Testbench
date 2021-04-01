@@ -34,7 +34,7 @@ extern MatrixXd buffer_result;
 
 std::mutex mtx;           // mutex for critical section
 
-bool flag;
+volatile int flag;
 
 int main() {
 
@@ -129,66 +129,71 @@ int main() {
 	int count = 0;
 	double total_time = 0;
 
+	flag = 0;
 
-	//auto start = high_resolution_clock::now();		// Get starting timepoint
-	while (count < 5000)
+	auto start = high_resolution_clock::now();		// Get starting timepoint
+	while (1)
 	{ 
 
 		//my_channel.ReadSamples2();
 
+		if (flag)
+		{
 
-		mtx.lock();
+			mtx.lock();
 
-		//filter.demodulate(numSamps, buffer_result);
-		//filter.demodulate(numSamps, my_channel.my_result);
-		filter.demodulate_w_phase(numSamps, buffer_result);
-		//filter.demodulate_w_phase(numSamps, my_channel.my_result);
-
-
-		mtx.unlock();
-		
-		//results_file << my_channel.my_result << endl;
+			//filter.demodulate(numSamps, buffer_result);
+			//filter.demodulate(numSamps, my_channel.my_result);
+			filter.demodulate_w_phase(numSamps, buffer_result);
+			//filter.demodulate_w_phase(numSamps, my_channel.my_result);
 
 
-		//for (int i = 0; i < 8; i++)
-			//cout << filter.magnitude_r[i] << endl;
+			mtx.unlock();
 
-		//cout << endl;
-
-		//std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			//results_file << my_channel.my_result << endl;
 
 
+			//for (int i = 0; i < 8; i++)
+				//cout << filter.magnitude_r[i] << endl;
 
-		//for (int i = 1; i < 8; i++)
-		//	sensor_flux(i) = -sensor_flux(i);
+			//cout << endl;
 
-		//cout << sensor_flux << endl << endl;
-
-		// From demodulation code
-		//PandO = my_sensor.Solve(filter.magnitude_r, initial_condition);
-		PandO = my_sensor.Solve(filter.magnitude_r, PandO);
-
-		// When using text file of sensor fluxes
-		//PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   
-
-
-		//cout << "\n -> SOLVED P&O " << endl;
-		//cout << " x : " << PandO[0] * 100 << " cm" << endl;
-		//cout << " y : " << PandO[1] * 100 << " cm" << endl;
-		//cout << " z : " << PandO[2] * 100 << " cm" << endl;
-		//cout << " Pitch : " << PandO[3] << " rads " << endl;
-		//cout << " Yaw : " << PandO[4]  << " rads " << endl << endl;
-
-
-		my_server.SendIGTMessage(PandO);
-
-		
-		
-		//std::this_thread::sleep_for(std::chrono::milliseconds(250));
+			//std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 
 
-		count++;
+			//for (int i = 1; i < 8; i++)
+			//	sensor_flux(i) = -sensor_flux(i);
+
+			//cout << sensor_flux << endl << endl;
+
+			// From demodulation code
+			//PandO = my_sensor.Solve(filter.magnitude_r, initial_condition);
+			PandO = my_sensor.Solve(filter.magnitude_r, PandO);
+
+			// When using text file of sensor fluxes
+			//PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   
+
+
+			//cout << "\n -> SOLVED P&O " << endl;
+			//cout << " x : " << PandO[0] * 100 << " cm" << endl;
+			//cout << " y : " << PandO[1] * 100 << " cm" << endl;
+			//cout << " z : " << PandO[2] * 100 << " cm" << endl;
+			//cout << " Pitch : " << PandO[3] << " rads " << endl;
+			//cout << " Yaw : " << PandO[4]  << " rads " << endl << endl;
+
+
+			my_server.SendIGTMessage(PandO);
+
+			flag = 0;
+
+			//std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+
+
+			count++;
+
+		}
 
 		//if (count == num_of_points)
 		
@@ -197,17 +202,15 @@ int main() {
 	}
 	
 	
-	//auto stop = high_resolution_clock::now();        // Get stopping timepoint
+	auto stop = high_resolution_clock::now();        // Get stopping timepoint
 
-	//auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
+	auto duration = duration_cast<milliseconds>(stop - start);    	 // Get duration by subtracting timepoints 
 
-	//total_time = total_time + duration.count();
+	total_time = duration.count();
 
-	//cout << "System rate : " << (count / total_time) * 1000 << " Hz " << endl;
+	cout << "Update rate : " << (count / total_time) * 1000 << " Hz " << endl;
 
-	
-	
-
+	cout << duration.count() / 1000 << endl;
 
 	getchar();
 

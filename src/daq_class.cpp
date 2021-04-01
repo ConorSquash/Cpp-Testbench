@@ -38,7 +38,7 @@ MatrixXd read_data_buffer(int num_of_channels_used, int samps_per_chan, float64 
 MatrixXd read_data_buffer2(int samps_per_chan, float64 buff_data[5000], float64 buff_data2[5000]);
 
 std::mutex mtx_daq;           // mutex for critical section
-extern bool flag;
+extern volatile int flag;
 
 DAQ::DAQ(double Fs, double samples, bool is_finite, string dev, string channel1, string channel2)
 {
@@ -272,6 +272,8 @@ int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEvent
 			buffer_result(i, j) = buff_data[i + (j * nSamples)];
 
 	mtx_daq.unlock();
+
+	flag = 1;
 
 Error:
 	if (DAQmxFailed(error)) {
