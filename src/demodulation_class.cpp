@@ -40,7 +40,7 @@ Demod::Demod(double Fs, int numSamples)
 	VectorXd t(numSamples);
 
 	for (int i = 0; i < numSamples; i++)
-		t(i) = (i * Ts);
+		t(i) = ((double)i * Ts);
 
 	// Define the transmission frequencies of the emitter coil
 	VectorXd F(8);
@@ -56,7 +56,7 @@ Demod::Demod(double Fs, int numSamples)
 	// Define the demodulation matrix for the asynchronous demodulation scheme
 
 	for (int j = 0; j < 8; j++)
-		E.row(j) = exp(2 * M_PI * F(j) * -1i * t.array());
+		E.row(j) = exp(2 * M_PI * F(j) * 1i * t.array());
 
 	E.transposeInPlace();		// Must transpose in place when replacing with a transpose of itself!!! 
 								// Same as E = E.transpose().eval();
@@ -96,8 +96,14 @@ int Demod::demodulate_w_phase(double numSamples, MatrixXd sensor_and_coil_data) 
 	// Demodulate each frequency component using this matrix fir method.
 	Y = sensor_and_coil_data.transpose() * demod_matrix;
 
+	//TRY
+	//sensor_and_coil_data.transposeInPlace();
+	//Y = sensor_and_coil_data * demod_matrix;
+
 	// Calculate the amplitude of each component, both currentand magnetic field measurements are in here
 	MagY = (2 * Y.array().abs()) / numSamples;
+
+	MagY_c = (2 * Y.array().abs()) / numSamples;
 
 	//cout << "MagY(0, 0) = " << MagY(0, 0) << endl;
 

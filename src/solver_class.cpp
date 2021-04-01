@@ -305,6 +305,11 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	// If the solver doesnt converge or is outside the bounds then return the initial condition
 	// which is the previously solved for point
 
+	//cout << "solver error : " << result.error << endl;
+	//cout << "solver fval : " << result.fval << endl;
+
+	
+
 	if ((result.converged == 0))
 	{
 		cout << "Did not converge! -->> Returning initial condition" <<  endl;

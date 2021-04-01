@@ -86,7 +86,7 @@ int main() {
 	// ========= SETUP ================
 
 	double Fs = 100e3;
-	double numSamps = 2500;
+	double numSamps = 1000;
 
 	vector <double> static_cal = { -0.4324,-0.2946, -0.2106,-0.1565,-0.1234,-0.0984,-0.0785,-0.0710 };
 
@@ -149,10 +149,10 @@ int main() {
 		//results_file << my_channel.my_result << endl;
 
 
-		//for (int i = 0; i < 8; i++)
-		//	cout << filter.magnitude_r[i] << endl;
+		for (int i = 0; i < 8; i++)
+			cout << filter.magnitude_r[i] << endl;
 
-		//cout << endl;
+		cout << endl;
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -165,21 +165,21 @@ int main() {
 
 		// From demodulation code
 		//PandO = my_sensor.Solve(filter.magnitude_r, initial_condition);
-		PandO = my_sensor.Solve(filter.magnitude_r, PandO);
+		//PandO = my_sensor.Solve(filter.magnitude_r, PandO);
 
 		// When using text file of sensor fluxes
 		//PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   
 
 
-		cout << "\n -> SOLVED P&O " << endl;
-		cout << " x : " << PandO[0] * 100 << " cm" << endl;
-		cout << " y : " << PandO[1] * 100 << " cm" << endl;
-		cout << " z : " << PandO[2] * 100 << " cm" << endl;
-		cout << " Pitch : " << PandO[3] << " rads " << endl;
-		cout << " Yaw : " << PandO[4]  << " rads " << endl << endl;
+		//cout << "\n -> SOLVED P&O " << endl;
+		//cout << " x : " << PandO[0] * 100 << " cm" << endl;
+		//cout << " y : " << PandO[1] * 100 << " cm" << endl;
+		//cout << " z : " << PandO[2] * 100 << " cm" << endl;
+		//cout << " Pitch : " << PandO[3] << " rads " << endl;
+		//cout << " Yaw : " << PandO[4]  << " rads " << endl << endl;
 
 
-		my_server.SendMessage(PandO);
+		//my_server.SendMessage(PandO);
 
 		mtx.unlock();
 		

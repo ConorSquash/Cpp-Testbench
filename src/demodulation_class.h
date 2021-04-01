@@ -31,6 +31,9 @@ private:
 
 	MatrixXcd Y;
 	MatrixXd MagY, PhaseY;
+
+	MatrixXcd MagY_c;
+
 	VectorXd Phase1;
 	VectorXd signs, Bfield;
 
