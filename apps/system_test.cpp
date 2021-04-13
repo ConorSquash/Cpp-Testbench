@@ -46,7 +46,7 @@ int main() {
 
 	// Create text file to write P&O data to
 	ofstream results_file;
-	results_file.open("daq_samples_coil1_5000samps.txt");
+	results_file.open("rotation_test_neg_y.txt");
 
 
 	// READ TEXT FILE
@@ -93,20 +93,14 @@ int main() {
 	vector <double> cal = { 2.5968, -1.6552, -1.0803, -0.7937, -0.5783, -0.4606, -0.3466, -0.2964 };
 	//vector <double> cal = { 2.5968, 1.6552, 1.0803, 0.7937, 0.5783, 0.4606, 0.3466, 0.2964 };
 
-	int port = 18944;	// Default port
+	int port = 18945;	// Default port = 18944
 	float fps = 1000;
 
 	// Provide an initial guess for x,y,z,theta,phi
 	vector <double> initial_condition = { 0, 0, 0.25, M_PI_2 , M_PI_2 };
 
-	// Sets up the DAQ to sample channel 1 at Fs and fills a buffer of numSamps samples
-	//DAQ my_channel(Fs, numSamps, TRUE, "Dev1", "0", "4");
-
+	// Sets up the DAQ to sample at Fs and fills a buffer of numSamps samples
 	DAQ my_channel(Fs, numSamps, FALSE, "Dev2","0", "4");
-
-	//DAQ my_channel(Fs, numSamps, TRUE, "Dev2", "0", "4");
-
-	//DAQ my_channel(Fs, numSamps, FALSE, "Dev1", "1", "15");
 
 	Demod filter(Fs, numSamps); 	// Sets up the demodulation parameters
 
@@ -132,44 +126,28 @@ int main() {
 	flag = 0;
 
 	auto start = high_resolution_clock::now();		// Get starting timepoint
-	while (1)
+	while (count < 100)
 	{ 
-
-		//my_channel.ReadSamples2();
 
 		if (flag)
 		{
 
 			mtx.lock();
 
-			//filter.demodulate(numSamps, buffer_result);
-			//filter.demodulate(numSamps, my_channel.my_result);
 			filter.demodulate_w_phase(numSamps, buffer_result);
-			//filter.demodulate_w_phase(numSamps, my_channel.my_result);
-
 
 			mtx.unlock();
 
-			//results_file << my_channel.my_result << endl;
-
-
-			//for (int i = 0; i < 8; i++)
-				//cout << filter.magnitude_r[i] << endl;
-
-			//cout << endl;
-
-			//std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-
-
-			//for (int i = 1; i < 8; i++)
-			//	sensor_flux(i) = -sensor_flux(i);
-
-			//cout << sensor_flux << endl << endl;
-
-			// From demodulation code
-			//PandO = my_sensor.Solve(filter.magnitude_r, initial_condition);
 			PandO = my_sensor.Solve(filter.magnitude_r, PandO);
+
+			results_file << PandO[3]  << ", " <<
+				PandO[4]  << endl;
+
+			//results_file << PandO[0] << ", " <<
+			//	PandO[1] << ", " <<
+			//	PandO[2] << ", " <<
+			//	PandO[3] << ", " <<
+			//	PandO[4] << ", " << endl;
 
 			// When using text file of sensor fluxes
 			//PandO = my_sensor.Solve(magnetic_flux_matrix[count], initial_condition);   
@@ -186,10 +164,6 @@ int main() {
 			my_server.SendIGTMessage(PandO);
 
 			flag = 0;
-
-			//std::this_thread::sleep_for(std::chrono::milliseconds(250));
-
-
 
 			count++;
 

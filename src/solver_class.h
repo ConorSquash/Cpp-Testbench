@@ -33,6 +33,8 @@ private:
 	double theta_max;
 	double phi_max;
 
+	vector <double> PandO_reset;
+
 public:
 	
 	int Setup();

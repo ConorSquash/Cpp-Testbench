@@ -256,6 +256,8 @@ int Solver::ConfigureSolver()
 	theta_max = M_PI;
 	phi_max = 3 * M_PI;
 
+	PandO_reset = { 0, 0, 0.20, M_PI_2 , -M_PI_2 };
+
 	return 0;
 
 }
@@ -314,13 +316,13 @@ vector <double> Solver::Solve(vector <double> amplitudes, vector <double> initia
 	{
 		cout << "Did not converge! -->> Returning initial condition" <<  endl;
 
-		return initial_condition;
+		return PandO_reset;
 	}
 	else if (((result.xval(0) > x_max) || (result.xval(0) < x_min)) || ((result.xval(1) > y_max) || (result.xval(1) < y_min)) || ((result.xval(2) > z_max) || (result.xval(2) < z_min)))
 	{
 		cout << "Out of bounds! -->> Returning initial condition" << endl;
 
-		return initial_condition;
+		return PandO_reset;
 	}
 	else
 	{

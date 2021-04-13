@@ -73,26 +73,26 @@ void OpenIGTLink::SendIGTMessage(vector <double> pando)
 void OpenIGTLink::CreateMatrix(vector <double> pando)
 {
     //  First column
-    m_matrix[0][0] = cos(pando[4]) * cos(pando[3]);
-    m_matrix[1][0] = sin(pando[4]) * cos(pando[3]);
+    m_matrix[0][0] = -cos(pando[4]) * cos(pando[3]);
+    m_matrix[1][0] = -sin(pando[4]) * cos(pando[3]);
     m_matrix[2][0] = -sin(pando[3]);
     m_matrix[3][0] = 0;
 
     //  Second column
-    m_matrix[0][1] = -sin(pando[4]);
-    m_matrix[1][1] = cos(pando[4]);
+    m_matrix[0][1] = sin(pando[4]);
+    m_matrix[1][1] = -cos(pando[4]);
     m_matrix[2][1] = 0;
     m_matrix[3][1] = 0;
 
     //  Third column
-    m_matrix[0][2] = cos(pando[4]) * sin(pando[3]);
-    m_matrix[1][2] = sin(pando[4]) * sin(pando[3]);
+    m_matrix[0][2] = -cos(pando[4]) * sin(pando[3]);
+    m_matrix[1][2] = -sin(pando[4]) * sin(pando[3]);
     m_matrix[2][2] = cos(pando[3]);
     m_matrix[3][2] = 0;
 
     // Fourth column
-    m_matrix[0][3] = pando[0] * 1000;
-    m_matrix[1][3] = pando[1] * 1000;
+    m_matrix[0][3] = -pando[0] * 1000;
+    m_matrix[1][3] = -pando[1] * 1000;
     m_matrix[2][3] = pando[2] * 1000;
     m_matrix[3][3] = 1;
 

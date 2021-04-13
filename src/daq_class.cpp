@@ -39,7 +39,6 @@ MatrixXd read_data_buffer2(int samps_per_chan, float64 buff_data[5000], float64 
 
 std::mutex mtx_daq;           // mutex for critical section
 extern volatile int flag;
-
 DAQ::DAQ(double Fs, double samples, bool is_finite, string dev, string channel1, string channel2)
 {
 
